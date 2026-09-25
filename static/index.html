@@ -1,102 +1,593 @@
 <!doctype html>
 <html lang="ru">
+
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+
 <title>Cross-Exchange Futures Spread</title>
+
 <script src="https://unpkg.com/lightweight-charts@5.0.0/dist/lightweight-charts.standalone.production.js"></script>
+
 <style>
-body{margin:0;background:#0d1117;color:#e6edf3;font-family:Arial,sans-serif}
-.top{padding:16px 20px;border-bottom:1px solid #30363d}
-h1{font-size:20px;margin:0 0 12px}
-.controls{display:flex;gap:10px;flex-wrap:wrap}
-select,input,button{background:#161b22;color:#e6edf3;border:1px solid #30363d;border-radius:6px;padding:9px 11px}
-button{cursor:pointer}
-.main{display:grid;grid-template-columns:280px 1fr;min-height:calc(100vh - 85px)}
-.panel{padding:18px;border-right:1px solid #30363d}
-.quote{padding:12px 0;border-bottom:1px solid #30363d}
-.label{color:#8b949e;font-size:12px;margin-bottom:5px}
-.price{font-size:18px}
-.spread{font-size:28px;margin:18px 0}
-.chart{min-height:600px}
-.status{color:#8b949e;font-size:12px;margin-top:12px}
-@media(max-width:800px){.main{grid-template-columns:1fr}.panel{border-right:0;border-bottom:1px solid #30363d}.chart{min-height:500px}}
+
+body{
+    margin:0;
+    background:#0d1117;
+    color:#e6edf3;
+    font-family:Arial,sans-serif;
+}
+
+.top{
+    padding:16px 20px;
+    border-bottom:1px solid #30363d;
+}
+
+h1{
+    font-size:20px;
+    margin:0 0 12px;
+}
+
+.controls{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+select,
+input,
+button{
+    background:#161b22;
+    color:#e6edf3;
+    border:1px solid #30363d;
+    border-radius:6px;
+    padding:9px 11px;
+}
+
+button{
+    cursor:pointer;
+}
+
+.main{
+    display:grid;
+    grid-template-columns:280px 1fr;
+    min-height:calc(100vh - 85px);
+}
+
+.panel{
+    padding:18px;
+    border-right:1px solid #30363d;
+}
+
+.quote{
+    padding:12px 0;
+    border-bottom:1px solid #30363d;
+}
+
+.label{
+    color:#8b949e;
+    font-size:12px;
+    margin-bottom:5px;
+}
+
+.price{
+    font-size:18px;
+}
+
+.spread{
+    font-size:28px;
+    margin:18px 0;
+}
+
+.status{
+    color:#8b949e;
+    font-size:12px;
+    margin-top:12px;
+}
+
+.chart{
+    min-height:600px;
+}
+
+@media(max-width:800px){
+
+    .main{
+        grid-template-columns:1fr;
+    }
+
+    .panel{
+        border-right:0;
+        border-bottom:1px solid #30363d;
+    }
+
+}
+
 </style>
+
 </head>
+
 <body>
+
 <div class="top">
+
 <h1>Cross-Exchange Futures Spread</h1>
+
 <div class="controls">
-<select id="ex1"><option>GATE</option><option>BINANCE</option><option>BYBIT</option><option>MEXC</option></select>
-<input id="symbol" value="BTCUSDT" placeholder="BTCUSDT">
-<select id="ex2"><option>BINANCE</option><option>BYBIT</option><option>MEXC</option><option>GATE</option></select>
-<button id="start">Подключить</button>
+
+<select id="ex1">
+    <option>GATE</option>
+    <option>BINANCE</option>
+    <option>BYBIT</option>
+    <option>MEXC</option>
+</select>
+
+<input
+    id="symbol"
+    value="BTCUSDT"
+    placeholder="BTCUSDT"
+>
+
+<select id="ex2">
+    <option>BINANCE</option>
+    <option>BYBIT</option>
+    <option>MEXC</option>
+    <option>GATE</option>
+</select>
+
+<button id="start">
+    Подключить
+</button>
+
 </div>
+
 </div>
+
+
 <div class="main">
+
 <div class="panel">
-<div class="quote"><div class="label" id="l1">GATE</div><div>Bid: <span id="b1">—</span></div><div>Ask: <span id="a1">—</span></div><div class="label">Mid: <span id="m1">—</span></div></div>
-<div class="quote"><div class="label" id="l2">BINANCE</div><div>Bid: <span id="b2">—</span></div><div>Ask: <span id="a2">—</span></div><div class="label">Mid: <span id="m2">—</span></div></div>
-<div class="spread">SPREAD: <span id="sp">—</span></div>
-<div class="status" id="status">Не подключено</div>
+
+    <div class="quote">
+
+        <div class="label" id="l1">
+            GATE BTCUSDT
+        </div>
+
+        <div>
+            Bid:
+            <span id="b1">—</span>
+        </div>
+
+        <div>
+            Ask:
+            <span id="a1">—</span>
+        </div>
+
+        <div>
+            Mid:
+            <span id="m1">—</span>
+        </div>
+
+    </div>
+
+
+    <div class="quote">
+
+        <div class="label" id="l2">
+            BINANCE BTCUSDT
+        </div>
+
+        <div>
+            Bid:
+            <span id="b2">—</span>
+        </div>
+
+        <div>
+            Ask:
+            <span id="a2">—</span>
+        </div>
+
+        <div>
+            Mid:
+            <span id="m2">—</span>
+        </div>
+
+    </div>
+
+
+    <div class="spread">
+
+        SPREAD:
+        <span id="sp">—</span>
+
+    </div>
+
+
+    <div class="status" id="status">
+        Не подключено
+    </div>
+
 </div>
+
+
 <div class="chart" id="chart"></div>
+
 </div>
+
 
 <script>
-const chart = LightweightCharts.createChart(document.getElementById('chart'), {
- layout:{background:{color:'#0d1117'},textColor:'#8b949e'},
- grid:{vertLines:{color:'#161b22'},horzLines:{color:'#161b22'}},
- rightPriceScale:{borderColor:'#30363d'},
- timeScale:{borderColor:'#30363d',timeVisible:true,secondsVisible:true},
-});
-const spreadSeries = chart.addSeries(LightweightCharts.LineSeries,{lineWidth:2});
-const zeroSeries = chart.addSeries(LightweightCharts.LineSeries,{lineWidth:1});
-const maSeries = chart.addSeries(LightweightCharts.LineSeries,{lineWidth:1});
-zeroSeries.setData([{time:Math.floor(Date.now()/1000)-3600,value:0},{time:Math.floor(Date.now()/1000)+3600,value:0}]);
 
-let q={}, points=[], ws;
+const chart =
+    LightweightCharts.createChart(
+        document.getElementById('chart'),
+        {
+            layout:{
+                background:{color:'#0d1117'},
+                textColor:'#8b949e'
+            },
 
-function fmt(x){return x==null?'—':Number(x).toPrecision(10)}
-function setConfig(){
- if(ws) ws.close();
- ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws');
- ws.onopen=()=>ws.send(JSON.stringify({
-   type:'config',
-   exchange1:document.getElementById('ex1').value,
-   exchange2:document.getElementById('ex2').value,
-   symbol:document.getElementById('symbol').value
- }));
- ws.onmessage=e=>{
-   const d=JSON.parse(e.data);
-   if(d.type==='status'){document.getElementById('status').textContent=d.message;return}
-   if(d.type==='error'){document.getElementById('status').textContent=d.message;return}
-   if(d.type!=='quote')return;
-   q[d.exchange]=d;
-   const ex1=document.getElementById('ex1').value, ex2=document.getElementById('ex2').value;
-   document.getElementById('l1').textContent=ex1+' '+d.symbol;
-   document.getElementById('l2').textContent=ex2+' '+d.symbol;
-   if(q[ex1]){b1.textContent=fmt(q[ex1].bid);a1.textContent=fmt(q[ex1].ask);m1.textContent=fmt((q[ex1].bid+q[ex1].ask)/2)}
-   if(q[ex2]){b2.textContent=fmt(q[ex2].bid);a2.textContent=fmt(q[ex2].ask);m2.textContent=fmt((q[ex2].bid+q[ex2].ask)/2)}
-   if(q[ex1]&&q[ex2]){
-     const mid1=(q[ex1].bid+q[ex1].ask)/2, mid2=(q[ex2].bid+q[ex2].ask)/2;
-     const value=(mid1/mid2-1)*100;
-     sp.textContent=value.toFixed(4)+'%';
-     const t=Math.floor(Date.now()/1000);
-     points.push({time:t,value});
-     if(points.length>2000)points.shift();
-     spreadSeries.setData(points);
-     const n=Math.min(30,points.length), avg=points.slice(-n).reduce((s,p)=>s+p.value,0)/n;
-     maSeries.update({time:t,value:avg});
-     zeroSeries.update({time:t,value:0});
-     chart.timeScale().scrollToRealTime();
-   }
- };
- ws.onclose=()=>document.getElementById('status').textContent='Соединение закрыто — нажмите «Подключить»';
+            grid:{
+                vertLines:{color:'#161b22'},
+                horzLines:{color:'#161b22'}
+            },
+
+            rightPriceScale:{
+                borderColor:'#30363d'
+            },
+
+            timeScale:{
+                borderColor:'#30363d',
+                timeVisible:true,
+                secondsVisible:true
+            }
+        }
+    );
+
+
+const spreadSeries =
+    chart.addSeries(
+        LightweightCharts.LineSeries,
+        {
+            lineWidth:2
+        }
+    );
+
+
+const zeroSeries =
+    chart.addSeries(
+        LightweightCharts.LineSeries,
+        {
+            lineWidth:1
+        }
+    );
+
+
+let points = [];
+let ws = null;
+
+
+/* ---------------------------------------------------------
+   Формат цены
+--------------------------------------------------------- */
+
+function fmt(x){
+
+    if(x === null || x === undefined)
+        return '—';
+
+    const n = Number(x);
+
+    if(!Number.isFinite(n))
+        return '—';
+
+    return n.toPrecision(10);
 }
-document.getElementById('start').onclick=()=>{points=[];q={};spreadSeries.setData([]);maSeries.setData([]);setConfig()};
-window.addEventListener('resize',()=>chart.applyOptions({width:document.getElementById('chart').clientWidth,height:window.innerHeight-85}));
-chart.applyOptions({width:document.getElementById('chart').clientWidth,height:window.innerHeight-85});
+
+
+/* ---------------------------------------------------------
+   Сброс графика
+--------------------------------------------------------- */
+
+function resetChart(){
+
+    points = [];
+
+    spreadSeries.setData([]);
+
+    zeroSeries.setData([]);
+
+}
+
+
+/* ---------------------------------------------------------
+   Подключение
+--------------------------------------------------------- */
+
+function connect(){
+
+    if(ws){
+
+        try{
+            ws.close();
+        }catch(e){}
+
+    }
+
+    resetChart();
+
+
+    const exchange1 =
+        document.getElementById('ex1').value;
+
+    const exchange2 =
+        document.getElementById('ex2').value;
+
+    const symbol =
+        document.getElementById('symbol').value
+        .trim()
+        .toUpperCase();
+
+
+    document.getElementById('l1').textContent =
+        exchange1 + ' ' + symbol;
+
+    document.getElementById('l2').textContent =
+        exchange2 + ' ' + symbol;
+
+
+    document.getElementById('status').textContent =
+        'Подключение...';
+
+
+    const protocol =
+        location.protocol === 'https:'
+        ? 'wss://'
+        : 'ws://';
+
+
+    ws = new WebSocket(
+        protocol +
+        location.host +
+        '/ws'
+    );
+
+
+    ws.onopen = function(){
+
+        document.getElementById('status').textContent =
+            'Соединение установлено';
+
+
+        ws.send(
+            JSON.stringify({
+
+                type:'config',
+
+                exchange1:exchange1,
+
+                exchange2:exchange2,
+
+                symbol1:symbol,
+
+                symbol2:symbol
+
+            })
+        );
+
+    };
+
+
+    ws.onmessage = function(event){
+
+        const d =
+            JSON.parse(event.data);
+
+
+        /* -------------------------------------------------
+           Ошибка сервера
+        ------------------------------------------------- */
+
+        if(d.type === 'error'){
+
+            document.getElementById('status').textContent =
+                d.message || 'Ошибка';
+
+            return;
+
+        }
+
+
+        /* -------------------------------------------------
+           Подтверждение конфигурации
+        ------------------------------------------------- */
+
+        if(d.type === 'config'){
+
+            document.getElementById('l1').textContent =
+                d.exchange1 + ' ' + d.symbol1;
+
+            document.getElementById('l2').textContent =
+                d.exchange2 + ' ' + d.symbol2;
+
+            return;
+
+        }
+
+
+        /* -------------------------------------------------
+           Основной поток SPREAD
+        ------------------------------------------------- */
+
+        if(d.type !== 'spread')
+            return;
+
+
+        /* -------------------------------------------------
+           Названия инструментов
+        ------------------------------------------------- */
+
+        document.getElementById('l1').textContent =
+            d.exchange1 + ' ' + d.symbol1;
+
+        document.getElementById('l2').textContent =
+            d.exchange2 + ' ' + d.symbol2;
+
+
+        /* -------------------------------------------------
+           Первая биржа
+        ------------------------------------------------- */
+
+        document.getElementById('b1').textContent =
+            fmt(d.bid1);
+
+        document.getElementById('a1').textContent =
+            fmt(d.ask1);
+
+        document.getElementById('m1').textContent =
+            fmt(d.mid1);
+
+
+        /* -------------------------------------------------
+           Вторая биржа
+        ------------------------------------------------- */
+
+        document.getElementById('b2').textContent =
+            fmt(d.bid2);
+
+        document.getElementById('a2').textContent =
+            fmt(d.ask2);
+
+        document.getElementById('m2').textContent =
+            fmt(d.mid2);
+
+
+        /* -------------------------------------------------
+           SPREAD
+        ------------------------------------------------- */
+
+        const value =
+            Number(d.spread);
+
+
+        if(!Number.isFinite(value))
+            return;
+
+
+        document.getElementById('sp').textContent =
+            value.toFixed(4) + '%';
+
+
+        /* -------------------------------------------------
+           График
+        ------------------------------------------------- */
+
+        const t =
+            Math.floor(Date.now() / 1000);
+
+
+        points.push({
+            time:t,
+            value:value
+        });
+
+
+        if(points.length > 2000)
+            points.shift();
+
+
+        spreadSeries.setData(points);
+
+
+        /* -------------------------------------------------
+           Нулевая линия
+        ------------------------------------------------- */
+
+        const zeroPoints =
+            points.map(function(p){
+
+                return {
+                    time:p.time,
+                    value:0
+                };
+
+            });
+
+
+        zeroSeries.setData(
+            zeroPoints
+        );
+
+
+        chart.timeScale().scrollToRealTime();
+
+
+        document.getElementById('status').textContent =
+            'Данные поступают';
+
+    };
+
+
+    ws.onerror = function(){
+
+        document.getElementById('status').textContent =
+            'Ошибка WebSocket';
+
+    };
+
+
+    ws.onclose = function(){
+
+        document.getElementById('status').textContent =
+            'Соединение закрыто — нажмите «Подключить»';
+
+    };
+
+}
+
+
+/* ---------------------------------------------------------
+   Кнопка
+--------------------------------------------------------- */
+
+document.getElementById('start').onclick =
+    connect;
+
+
+/* ---------------------------------------------------------
+   Размер графика
+--------------------------------------------------------- */
+
+window.addEventListener(
+    'resize',
+    function(){
+
+        chart.applyOptions({
+
+            width:
+                document.getElementById('chart').clientWidth,
+
+            height:
+                window.innerHeight - 85
+
+        });
+
+    }
+);
+
+
+chart.applyOptions({
+
+    width:
+        document.getElementById('chart').clientWidth,
+
+    height:
+        window.innerHeight - 85
+
+});
+
+
 </script>
+
 </body>
+
 </html>
