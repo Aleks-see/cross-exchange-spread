@@ -1,232 +1,332 @@
 import asyncio
 import json
 import time
-from typing import Dict, Any
+from typing import Any, Dict, Optional
 
 import websockets
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-
 app = FastAPI()
-
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
-# ============================================================
-# SYMBOLS
-# ============================================================
-
 def normalize_symbol(symbol: str) -> str:
-    """
-    Пользовательский символ всегда приводим к виду:
-    NILUSDT
-    BTCUSDT
-    XRPUSDT
-    """
-    s = symbol.strip().upper().replace("-", "").replace("/", "")
+    s = symbol.strip().upper().replace("-", "").replace("/", "").replace("_", "")
+    if not s:
+        return ""
+    return s if s.endswith("USDT") else s + "USDT"
 
-    if s.endswith("USDT"):
-        return s
 
-    return s + "USDT"
+def base_symbol(symbol: str) -> str:
+    s = normalize_symbol(symbol)
+    return s[:-4] if s.endswith("USDT") else s
 
 
 def exchange_symbol(exchange: str, symbol: str) -> str:
-    """
-    Преобразование одного и того же пользовательского символа
-    в формат конкретной биржи.
-    """
-
-    s = normalize_symbol(symbol)
-    base = s[:-4]
+    base = base_symbol(symbol)
 
     if exchange in ("MEXC", "GATE"):
         return f"{base}_USDT"
 
-    # Binance / Bybit
     return f"{base}USDT"
 
 
-# ============================================================
-# QUOTE
-# ============================================================
+def to_float(value: Any) -> Optional[float]:
+    try:
+        if value is None or value == "":
+            return None
 
-def make_quote(
-    exchange: str,
-    original_symbol: str,
-    bid: float,
-    ask: float
-) -> Dict[str, Any]:
+        x = float(value)
 
-    mid = (bid + ask) / 2.0
+        if x <= 0:
+            return None
 
-    return {
-        "exchange": exchange,
-        "symbol": normalize_symbol(original_symbol),
-        "bid": bid,
-        "ask": ask,
-        "mid": mid,
-        "time": time.time(),
-    }
+        return x
+
+    except (TypeError, ValueError):
+        return None
+
+
+async def send_json(
+    ws: WebSocket,
+    lock: asyncio.Lock,
+    payload: Dict[str, Any]
+) -> bool:
+
+    try:
+        async with lock:
+            await ws.send_text(
+                json.dumps(payload, ensure_ascii=False)
+            )
+
+        return True
+
+    except Exception:
+        return False
+
+
+async def send_error(
+    ws: WebSocket,
+    lock: asyncio.Lock,
+    message: str
+) -> None:
+
+    await send_json(
+        ws,
+        lock,
+        {
+            "type": "error",
+            "message": message
+        }
+    )
 
 
 # ============================================================
 # BINANCE
 # ============================================================
 
-async def binance_connection(
+async def binance_worker(
+    ws: WebSocket,
+    lock: asyncio.Lock,
     symbol: str,
-    queue: asyncio.Queue
+    quotes: Dict[str, Dict[str, float]],
+    publish
 ):
 
     exchange = "BINANCE"
-    ws_symbol = exchange_symbol(exchange, symbol).lower()
 
-    url = f"wss://fstream.binance.com/ws/{ws_symbol}@bookTicker"
+    ex_symbol = exchange_symbol(
+        exchange,
+        symbol
+    ).lower()
+
+    url = (
+        f"wss://fstream.binance.com/ws/"
+        f"{ex_symbol}@bookTicker"
+    )
 
     while True:
 
         try:
 
+            await send_error(
+                ws,
+                lock,
+                f"{exchange}: подключение {ex_symbol.upper()}"
+            )
+
             async with websockets.connect(
                 url,
                 ping_interval=20,
                 ping_timeout=20,
-                close_timeout=5,
-            ) as ws:
+                open_timeout=15,
+                close_timeout=5
+            ) as sock:
 
-                while True:
+                await send_error(
+                    ws,
+                    lock,
+                    f"{exchange}: WebSocket подключен"
+                )
 
-                    raw = await ws.recv()
-                    data = json.loads(raw)
+                async for raw in sock:
 
-                    # Проверяем реальный символ от Binance.
-                    real_symbol = str(data.get("s", "")).upper()
+                    try:
+                        msg = json.loads(raw)
 
-                    if real_symbol != ws_symbol.upper():
+                    except Exception:
                         continue
 
-                    bid = float(data["b"])
-                    ask = float(data["a"])
-
-                    if bid <= 0 or ask <= 0:
-                        continue
-
-                    await queue.put(
-                        make_quote(
-                            exchange,
-                            symbol,
-                            bid,
-                            ask
-                        )
+                    data = msg.get(
+                        "data",
+                        msg
                     )
+
+                    bid = to_float(
+                        data.get("b")
+                    )
+
+                    ask = to_float(
+                        data.get("a")
+                    )
+
+                    if bid is not None and ask is not None:
+
+                        quotes[exchange] = {
+                            "bid": bid,
+                            "ask": ask
+                        }
+
+                        await publish()
 
         except asyncio.CancelledError:
             raise
 
-        except Exception:
-            await asyncio.sleep(2)
+        except Exception as e:
+
+            await send_error(
+                ws,
+                lock,
+                f"{exchange}: {type(e).__name__}: {e}"
+            )
+
+            await asyncio.sleep(3)
 
 
 # ============================================================
 # BYBIT
 # ============================================================
 
-async def bybit_connection(
+async def bybit_worker(
+    ws: WebSocket,
+    lock: asyncio.Lock,
     symbol: str,
-    queue: asyncio.Queue
+    quotes: Dict[str, Dict[str, float]],
+    publish
 ):
 
     exchange = "BYBIT"
-    ws_symbol = exchange_symbol(exchange, symbol)
 
-    url = "wss://stream.bybit.com/v5/public/linear"
+    ex_symbol = exchange_symbol(
+        exchange,
+        symbol
+    )
+
+    url = (
+        "wss://stream.bybit.com/"
+        "v5/public/linear"
+    )
+
+    last_bid = None
+    last_ask = None
 
     while True:
 
         try:
 
+            await send_error(
+                ws,
+                lock,
+                f"{exchange}: подключение {ex_symbol}"
+            )
+
             async with websockets.connect(
                 url,
                 ping_interval=20,
                 ping_timeout=20,
-                close_timeout=5,
-            ) as ws:
+                open_timeout=15,
+                close_timeout=5
+            ) as sock:
 
-                subscribe_message = {
-                    "op": "subscribe",
-                    "args": [
-                        f"tickers.{ws_symbol}"
-                    ]
-                }
-
-                await ws.send(
-                    json.dumps(subscribe_message)
+                await sock.send(
+                    json.dumps(
+                        {
+                            "op": "subscribe",
+                            "args": [
+                                f"tickers.{ex_symbol}"
+                            ]
+                        }
+                    )
                 )
 
-                while True:
+                await send_error(
+                    ws,
+                    lock,
+                    f"{exchange}: подписка tickers.{ex_symbol}"
+                )
 
-                    raw = await ws.recv()
-                    data = json.loads(raw)
+                async for raw in sock:
 
-                    topic = data.get("topic", "")
+                    try:
+                        msg = json.loads(raw)
 
-                    if topic != f"tickers.{ws_symbol}":
+                    except Exception:
                         continue
 
-                    ticker = data.get("data")
+                    if msg.get("success") is False:
 
-                    if not isinstance(ticker, dict):
-                        continue
-
-                    real_symbol = str(
-                        ticker.get("symbol", "")
-                    ).upper()
-
-                    if real_symbol != ws_symbol.upper():
-                        continue
-
-                    bid_raw = ticker.get("bid1Price")
-                    ask_raw = ticker.get("ask1Price")
-
-                    if bid_raw is None or ask_raw is None:
-                        continue
-
-                    bid = float(bid_raw)
-                    ask = float(ask_raw)
-
-                    if bid <= 0 or ask <= 0:
-                        continue
-
-                    await queue.put(
-                        make_quote(
-                            exchange,
-                            symbol,
-                            bid,
-                            ask
+                        await send_error(
+                            ws,
+                            lock,
+                            f"{exchange}: ошибка подписки: {msg}"
                         )
+
+                        continue
+
+                    data = msg.get("data")
+
+                    if isinstance(data, list):
+
+                        data = (
+                            data[0]
+                            if data
+                            else None
+                        )
+
+                    if not isinstance(data, dict):
+                        continue
+
+                    bid = to_float(
+                        data.get("bid1Price")
                     )
+
+                    ask = to_float(
+                        data.get("ask1Price")
+                    )
+
+                    if bid is not None:
+                        last_bid = bid
+
+                    if ask is not None:
+                        last_ask = ask
+
+                    if (
+                        last_bid is not None
+                        and
+                        last_ask is not None
+                    ):
+
+                        quotes[exchange] = {
+                            "bid": last_bid,
+                            "ask": last_ask
+                        }
+
+                        await publish()
 
         except asyncio.CancelledError:
             raise
 
-        except Exception:
-            await asyncio.sleep(2)
+        except Exception as e:
+
+            await send_error(
+                ws,
+                lock,
+                f"{exchange}: {type(e).__name__}: {e}"
+            )
+
+            await asyncio.sleep(3)
 
 
 # ============================================================
 # MEXC
 # ============================================================
 
-async def mexc_connection(
+async def mexc_worker(
+    ws: WebSocket,
+    lock: asyncio.Lock,
     symbol: str,
-    queue: asyncio.Queue
+    quotes: Dict[str, Dict[str, float]],
+    publish
 ):
 
     exchange = "MEXC"
-    ws_symbol = exchange_symbol(exchange, symbol)
+
+    ex_symbol = exchange_symbol(
+        exchange,
+        symbol
+    )
 
     url = "wss://contract.mexc.com/edge"
 
@@ -234,222 +334,265 @@ async def mexc_connection(
 
         try:
 
+            await send_error(
+                ws,
+                lock,
+                f"{exchange}: подключение {ex_symbol}"
+            )
+
             async with websockets.connect(
                 url,
                 ping_interval=20,
                 ping_timeout=20,
-                close_timeout=5,
-            ) as ws:
+                open_timeout=15,
+                close_timeout=5
+            ) as sock:
 
-                subscribe_message = {
-                    "method": "sub.ticker",
-                    "param": {
-                        "symbol": ws_symbol
-                    }
-                }
-
-                await ws.send(
-                    json.dumps(subscribe_message)
+                await sock.send(
+                    json.dumps(
+                        {
+                            "method": "sub.ticker",
+                            "param": {
+                                "symbol": ex_symbol
+                            }
+                        }
+                    )
                 )
 
-                async def mexc_ping():
-
-                    while True:
-
-                        await asyncio.sleep(15)
-
-                        try:
-                            await ws.send(
-                                json.dumps({
-                                    "method": "ping"
-                                })
-                            )
-                        except Exception:
-                            return
-
-                ping_task = asyncio.create_task(
-                    mexc_ping()
+                await send_error(
+                    ws,
+                    lock,
+                    f"{exchange}: подписка sub.ticker {ex_symbol}"
                 )
 
-                try:
-
-                    while True:
-
-                        raw = await ws.recv()
-                        data = json.loads(raw)
-
-                        if data.get("channel") != "push.ticker":
-                            continue
-
-                        ticker = data.get("data")
-
-                        if not isinstance(ticker, dict):
-                            continue
-
-                        real_symbol = str(
-                            ticker.get("symbol", "")
-                        ).upper()
-
-                        if real_symbol != ws_symbol.upper():
-                            continue
-
-                        bid_raw = ticker.get("bid1")
-                        ask_raw = ticker.get("ask1")
-
-                        if bid_raw is None or ask_raw is None:
-                            continue
-
-                        bid = float(bid_raw)
-                        ask = float(ask_raw)
-
-                        if bid <= 0 or ask <= 0:
-                            continue
-
-                        await queue.put(
-                            make_quote(
-                                exchange,
-                                symbol,
-                                bid,
-                                ask
-                            )
-                        )
-
-                finally:
-
-                    ping_task.cancel()
+                async for raw in sock:
 
                     try:
-                        await ping_task
-                    except asyncio.CancelledError:
-                        pass
+                        msg = json.loads(raw)
+
+                    except Exception:
+                        continue
+
+                    if msg.get("channel") != "push.ticker":
+                        continue
+
+                    data = msg.get("data")
+
+                    if not isinstance(data, dict):
+                        continue
+
+                    bid = to_float(
+                        data.get("bid1")
+                    )
+
+                    ask = to_float(
+                        data.get("ask1")
+                    )
+
+                    if bid is not None and ask is not None:
+
+                        quotes[exchange] = {
+                            "bid": bid,
+                            "ask": ask
+                        }
+
+                        await publish()
 
         except asyncio.CancelledError:
             raise
 
-        except Exception:
-            await asyncio.sleep(2)
+        except Exception as e:
+
+            await send_error(
+                ws,
+                lock,
+                f"{exchange}: {type(e).__name__}: {e}"
+            )
+
+            await asyncio.sleep(3)
 
 
 # ============================================================
 # GATE
 # ============================================================
 
-async def gate_connection(
+async def gate_worker(
+    ws: WebSocket,
+    lock: asyncio.Lock,
     symbol: str,
-    queue: asyncio.Queue
+    quotes: Dict[str, Dict[str, float]],
+    publish
 ):
 
     exchange = "GATE"
-    ws_symbol = exchange_symbol(exchange, symbol)
 
-    # ВАЖНО:
-    # именно USDT endpoint.
-    # Старый общий endpoint мог отправлять в BTC-контракты.
-    url = "wss://fx-ws.gateio.ws/v4/ws/usdt"
+    ex_symbol = exchange_symbol(
+        exchange,
+        symbol
+    )
+
+    url = (
+        "wss://fx-ws.gateio.ws/"
+        "v4/ws/usdt"
+    )
 
     while True:
 
         try:
 
+            await send_error(
+                ws,
+                lock,
+                f"{exchange}: подключение {ex_symbol}"
+            )
+
             async with websockets.connect(
                 url,
                 ping_interval=20,
                 ping_timeout=20,
-                close_timeout=5,
-            ) as ws:
+                open_timeout=15,
+                close_timeout=5
+            ) as sock:
 
-                subscribe_message = {
-                    "time": int(time.time()),
-                    "channel": "futures.book_ticker",
-                    "event": "subscribe",
-                    "payload": [
-                        ws_symbol
-                    ]
-                }
-
-                await ws.send(
-                    json.dumps(subscribe_message)
+                await sock.send(
+                    json.dumps(
+                        {
+                            "time": int(time.time()),
+                            "channel": "futures.book_ticker",
+                            "event": "subscribe",
+                            "payload": [
+                                ex_symbol
+                            ]
+                        }
+                    )
                 )
 
-                while True:
+                await send_error(
+                    ws,
+                    lock,
+                    f"{exchange}: подписка futures.book_ticker {ex_symbol}"
+                )
 
-                    raw = await ws.recv()
-                    data = json.loads(raw)
+                async for raw in sock:
 
-                    if data.get("channel") != "futures.book_ticker":
+                    try:
+                        msg = json.loads(raw)
+
+                    except Exception:
                         continue
 
-                    if data.get("event") != "update":
+                    if msg.get("error"):
+
+                        await send_error(
+                            ws,
+                            lock,
+                            f"{exchange}: API error: {msg.get('error')}"
+                        )
+
                         continue
 
-                    result = data.get("result")
+                    result = msg.get("result")
 
                     if not isinstance(result, dict):
                         continue
 
-                    # =================================================
-                    # КРИТИЧЕСКАЯ ПРОВЕРКА
-                    #
-                    # Если мы запросили NIL_USDT,
-                    # BTC_USDT сюда никогда не попадёт.
-                    # =================================================
-
-                    real_symbol = str(
-                        result.get("s", "")
-                    ).upper()
-
-                    if real_symbol != ws_symbol.upper():
-                        continue
-
-                    bid_raw = result.get("b")
-                    ask_raw = result.get("a")
-
-                    if bid_raw in (None, ""):
-                        continue
-
-                    if ask_raw in (None, ""):
-                        continue
-
-                    bid = float(bid_raw)
-                    ask = float(ask_raw)
-
-                    if bid <= 0 or ask <= 0:
-                        continue
-
-                    await queue.put(
-                        make_quote(
-                            exchange,
-                            symbol,
-                            bid,
-                            ask
-                        )
+                    bid = to_float(
+                        result.get("b")
                     )
+
+                    ask = to_float(
+                        result.get("a")
+                    )
+
+                    if bid is not None and ask is not None:
+
+                        quotes[exchange] = {
+                            "bid": bid,
+                            "ask": ask
+                        }
+
+                        await publish()
 
         except asyncio.CancelledError:
             raise
 
-        except Exception:
-            await asyncio.sleep(2)
+        except Exception as e:
+
+            await send_error(
+                ws,
+                lock,
+                f"{exchange}: {type(e).__name__}: {e}"
+            )
+
+            await asyncio.sleep(3)
 
 
 # ============================================================
-# EXCHANGE ROUTER
+# EXCHANGE SELECTOR
 # ============================================================
 
-EXCHANGE_CONNECTIONS = {
-    "BINANCE": binance_connection,
-    "BYBIT": bybit_connection,
-    "MEXC": mexc_connection,
-    "GATE": gate_connection,
-}
+async def run_exchange(
+    exchange: str,
+    ws: WebSocket,
+    lock: asyncio.Lock,
+    symbol: str,
+    quotes: Dict[str, Dict[str, float]],
+    publish
+):
+
+    if exchange == "BINANCE":
+
+        return await binance_worker(
+            ws,
+            lock,
+            symbol,
+            quotes,
+            publish
+        )
+
+    if exchange == "BYBIT":
+
+        return await bybit_worker(
+            ws,
+            lock,
+            symbol,
+            quotes,
+            publish
+        )
+
+    if exchange == "MEXC":
+
+        return await mexc_worker(
+            ws,
+            lock,
+            symbol,
+            quotes,
+            publish
+        )
+
+    if exchange == "GATE":
+
+        return await gate_worker(
+            ws,
+            lock,
+            symbol,
+            quotes,
+            publish
+        )
+
+    await send_error(
+        ws,
+        lock,
+        f"Неизвестная биржа: {exchange}"
+    )
 
 
 # ============================================================
-# ROOT
+# MAIN PAGE
 # ============================================================
 
 @app.get("/")
-async def root():
+async def index():
 
     return FileResponse(
         "static/index.html"
@@ -457,7 +600,7 @@ async def root():
 
 
 # ============================================================
-# WEBSOCKET
+# BROWSER WEBSOCKET
 # ============================================================
 
 @app.websocket("/ws")
@@ -467,209 +610,220 @@ async def websocket_endpoint(
 
     await websocket.accept()
 
+    lock = asyncio.Lock()
+
     tasks = []
 
     try:
 
-        while True:
+        raw = await websocket.receive_text()
 
-            raw = await websocket.receive_text()
+        config = json.loads(raw)
 
-            try:
-                config = json.loads(raw)
-            except Exception:
-                continue
+        if config.get("type") != "config":
 
-            # --------------------------------------------------------
-            # Поддерживаем несколько возможных названий полей,
-            # чтобы не ломать существующий frontend.
-            # --------------------------------------------------------
-
-            exchange1 = (
-                config.get("exchange1")
-                or config.get("firstExchange")
-                or config.get("exchange")
+            await send_error(
+                websocket,
+                lock,
+                "Ожидалась конфигурация подключения."
             )
 
-            exchange2 = (
-                config.get("exchange2")
-                or config.get("secondExchange")
-            )
+            return
 
-            symbol1 = (
+        exchange1 = str(
+            config.get(
+                "exchange1",
+                ""
+            )
+        ).upper()
+
+        exchange2 = str(
+            config.get(
+                "exchange2",
+                ""
+            )
+        ).upper()
+
+        symbol = normalize_symbol(
+            str(
                 config.get("symbol1")
-                or config.get("symbol")
-                or config.get("ticker")
-            )
-
-            symbol2 = (
+                or
                 config.get("symbol2")
-                or symbol1
+                or
+                ""
+            )
+        )
+
+        allowed = {
+            "BINANCE",
+            "BYBIT",
+            "MEXC",
+            "GATE"
+        }
+
+        if exchange1 not in allowed:
+
+            await send_error(
+                websocket,
+                lock,
+                f"Неизвестная первая биржа: {exchange1}"
             )
 
-            if not exchange1 or not exchange2:
-                continue
+            return
 
-            if not symbol1 or not symbol2:
-                continue
+        if exchange2 not in allowed:
 
-            exchange1 = str(exchange1).upper().strip()
-            exchange2 = str(exchange2).upper().strip()
-
-            symbol1 = normalize_symbol(str(symbol1))
-            symbol2 = normalize_symbol(str(symbol2))
-
-            if exchange1 not in EXCHANGE_CONNECTIONS:
-                continue
-
-            if exchange2 not in EXCHANGE_CONNECTIONS:
-                continue
-
-            # --------------------------------------------------------
-            # Останавливаем старые потоки этого клиента.
-            # --------------------------------------------------------
-
-            for task in tasks:
-                task.cancel()
-
-            if tasks:
-
-                await asyncio.gather(
-                    *tasks,
-                    return_exceptions=True
-                )
-
-            tasks = []
-
-            queue = asyncio.Queue()
-
-            quote1 = None
-            quote2 = None
-
-            # --------------------------------------------------------
-            # Запускаем ДВА независимых потока.
-            # Каждый получает СВОЙ exchange + СВОЙ symbol.
-            # --------------------------------------------------------
-
-            task1 = asyncio.create_task(
-                EXCHANGE_CONNECTIONS[exchange1](
-                    symbol1,
-                    queue
-                )
+            await send_error(
+                websocket,
+                lock,
+                f"Неизвестная вторая биржа: {exchange2}"
             )
 
-            task2 = asyncio.create_task(
-                EXCHANGE_CONNECTIONS[exchange2](
-                    symbol2,
-                    queue
-                )
+            return
+
+        if exchange1 == exchange2:
+
+            await send_error(
+                websocket,
+                lock,
+                "Выберите две разные биржи."
             )
 
-            tasks = [task1, task2]
+            return
 
-            # --------------------------------------------------------
-            # Сообщаем frontend, какие реальные инструменты выбраны.
-            # --------------------------------------------------------
+        if not symbol:
 
-            await websocket.send(
-                json.dumps({
-                    "type": "config",
-                    "exchange1": exchange1,
-                    "symbol1": symbol1,
-                    "exchange2": exchange2,
-                    "symbol2": symbol2,
-                })
+            await send_error(
+                websocket,
+                lock,
+                "Введите тикер."
             )
 
-            # --------------------------------------------------------
-            # Получаем котировки.
-            # --------------------------------------------------------
+            return
 
-            while True:
+        await send_json(
+            websocket,
+            lock,
+            {
+                "type": "config",
+                "exchange1": exchange1,
+                "exchange2": exchange2,
+                "symbol1": symbol,
+                "symbol2": symbol
+            }
+        )
 
-                quote = await queue.get()
+        quotes: Dict[str, Dict[str, float]] = {}
 
-                if quote["exchange"] == exchange1:
-                    quote1 = quote
+        async def publish():
 
-                elif quote["exchange"] == exchange2:
-                    quote2 = quote
+            q1 = quotes.get(exchange1)
+            q2 = quotes.get(exchange2)
 
-                # ----------------------------------------------------
-                # Пока обе цены не пришли — spread не считаем.
-                # ----------------------------------------------------
+            if not q1 or not q2:
+                return
 
-                if quote1 is None or quote2 is None:
-                    await websocket.send(
-                        json.dumps({
-                            "type": "quote",
-                            **quote,
-                        })
-                    )
-                    continue
+            bid1 = q1["bid"]
+            ask1 = q1["ask"]
 
-                mid1 = quote1["mid"]
-                mid2 = quote2["mid"]
+            bid2 = q2["bid"]
+            ask2 = q2["ask"]
 
-                if mid1 <= 0 or mid2 <= 0:
-                    continue
+            mid1 = (
+                bid1 + ask1
+            ) / 2.0
 
-                # ----------------------------------------------------
-                # ОСНОВНОЙ SPREAD
-                #
-                # + = первый инструмент дороже второго
-                # - = первый инструмент дешевле второго
-                # ----------------------------------------------------
+            mid2 = (
+                bid2 + ask2
+            ) / 2.0
 
-                spread = (
-                    (mid1 / mid2) - 1.0
-                ) * 100.0
+            if mid2 == 0:
+                return
 
-                # ----------------------------------------------------
-                # Отправляем одновременно:
-                # 1. обе котировки
-                # 2. реальные символы
-                # 3. spread
-                #
-                # symbol1 и symbol2 всегда пользовательские символы.
-                # Поэтому GATE больше не сможет показывать BTCUSDT,
-                # если пользователь выбрал NILUSDT.
-                # ----------------------------------------------------
+            spread = (
+                mid1 / mid2 - 1.0
+            ) * 100.0
 
-                response = {
+            await send_json(
+                websocket,
+                lock,
+                {
                     "type": "spread",
 
                     "exchange1": exchange1,
-                    "symbol1": symbol1,
-
                     "exchange2": exchange2,
-                    "symbol2": symbol2,
 
-                    "bid1": quote1["bid"],
-                    "ask1": quote1["ask"],
+                    "symbol1": symbol,
+                    "symbol2": symbol,
+
+                    "bid1": bid1,
+                    "ask1": ask1,
                     "mid1": mid1,
 
-                    "bid2": quote2["bid"],
-                    "ask2": quote2["ask"],
+                    "bid2": bid2,
+                    "ask2": ask2,
                     "mid2": mid2,
 
-                    "spread": spread,
-
-                    # Дополнительно оставляем структуры quote,
-                    # чтобы frontend мог использовать их напрямую.
-                    "first": quote1,
-                    "second": quote2,
+                    "spread": spread
                 }
+            )
 
-                await websocket.send(
-                    json.dumps(response)
+        tasks = [
+
+            asyncio.create_task(
+                run_exchange(
+                    exchange1,
+                    websocket,
+                    lock,
+                    symbol,
+                    quotes,
+                    publish
                 )
+            ),
+
+            asyncio.create_task(
+                run_exchange(
+                    exchange2,
+                    websocket,
+                    lock,
+                    symbol,
+                    quotes,
+                    publish
+                )
+            )
+        ]
+
+        await send_error(
+            websocket,
+            lock,
+            f"Запуск: {exchange1} ↔ {exchange2}, тикер {symbol}"
+        )
+
+        await asyncio.gather(
+            *tasks
+        )
 
     except WebSocketDisconnect:
+
         pass
 
     except asyncio.CancelledError:
+
         raise
+
+    except Exception as e:
+
+        try:
+
+            await send_error(
+                websocket,
+                lock,
+                f"SERVER: {type(e).__name__}: {e}"
+            )
+
+        except Exception:
+
+            pass
 
     finally:
 
