@@ -4,291 +4,549 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>BINANCE FLOW ANALYZER</title>
+<title>Flow Terminal</title>
 
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 
 <style>
-    * {
-        box-sizing: border-box;
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: #0b0e11;
+    color: #d6d9dc;
+    font-family: Arial, Helvetica, sans-serif;
+    overflow: hidden;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ================= HEADER ================= */
+
+.header {
+    height: 54px;
+    min-height: 54px;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 7px 12px;
+
+    background: #111418;
+    border-bottom: 1px solid #252a30;
+}
+
+.logo {
+    font-size: 16px;
+    font-weight: bold;
+    color: #e6e8eb;
+    margin-right: 8px;
+}
+
+.input {
+    height: 34px;
+
+    background: #090b0e;
+    border: 1px solid #343a41;
+    border-radius: 4px;
+
+    color: #e5e7ea;
+
+    padding: 0 10px;
+
+    font-size: 14px;
+
+    outline: none;
+
+    width: 125px;
+}
+
+.input:focus {
+    border-color: #59636e;
+}
+
+.date {
+    width: 120px;
+}
+
+.time {
+    width: 80px;
+}
+
+button {
+    height: 34px;
+
+    background: #191d22;
+    color: #d8dadd;
+
+    border: 1px solid #343a41;
+    border-radius: 4px;
+
+    padding: 0 12px;
+
+    cursor: pointer;
+
+    font-size: 13px;
+}
+
+button:hover {
+    background: #252a30;
+}
+
+.load {
+    background: #1d252b;
+}
+
+/* ================= STATS ================= */
+
+.stats {
+    height: 44px;
+    min-height: 44px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 25px;
+
+    padding: 0 15px;
+
+    background: #0d1013;
+    border-bottom: 1px solid #20252a;
+
+    font-size: 12px;
+}
+
+.stat {
+    display: flex;
+    gap: 7px;
+    align-items: center;
+}
+
+.stat-name {
+    color: #777e86;
+}
+
+.ask {
+    color: #b47b50;
+}
+
+.bid {
+    color: #39c77b;
+}
+
+.delta {
+    color: #25d7d7;
+}
+
+/* ================= CYCLES ================= */
+
+.cycles {
+    height: 40px;
+    min-height: 40px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 5px;
+
+    padding: 4px 10px;
+
+    background: #111418;
+    border-bottom: 1px solid #252a30;
+}
+
+.cycle {
+    height: 29px;
+
+    padding: 0 11px;
+
+    background: transparent;
+
+    border: 0;
+    border-radius: 3px;
+
+    color: #858c94;
+}
+
+.cycle:hover {
+    background: #1c2126;
+    color: #ddd;
+}
+
+.cycle.active {
+    background: #283038;
+    color: #f0f1f2;
+}
+
+/* ================= CHART AREA ================= */
+
+#charts {
+    flex: 1;
+
+    min-height: 0;
+
+    display: flex;
+    flex-direction: column;
+}
+
+#flowChart {
+    flex: 7;
+    min-height: 0;
+}
+
+#deltaChart {
+    flex: 3;
+    min-height: 0;
+
+    border-top: 1px solid #292e33;
+}
+
+/* ================= MOBILE ================= */
+
+@media (max-width: 700px) {
+
+    .header {
+        height: auto;
+        min-height: 50px;
+
+        flex-wrap: wrap;
+
+        padding: 7px;
     }
 
-    html, body {
-        margin: 0;
-        padding: 0;
-        background: #080808;
-        color: #ddd;
-        font-family: Arial, sans-serif;
-    }
-
-    body {
-        min-height: 100vh;
-    }
-
-    .container {
+    .logo {
         width: 100%;
-        padding: 10px;
+        margin-bottom: 2px;
     }
 
-    h1 {
-        text-align: center;
-        margin: 5px 0 15px;
-        font-size: 22px;
-        color: #eee;
+    .input {
+        width: 105px;
+    }
+
+    .date {
+        width: 105px;
+    }
+
+    .time {
+        width: 65px;
     }
 
     .stats {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
-        margin-bottom: 8px;
+        gap: 12px;
+        padding: 0 8px;
+        font-size: 10px;
     }
 
-    .card {
-        background: #111;
-        border: 1px solid #222;
-        border-radius: 8px;
-        padding: 10px;
-        text-align: center;
+    .cycles {
+        overflow-x: auto;
+        white-space: nowrap;
     }
 
-    .title {
-        font-size: 13px;
-        color: #aaa;
-        margin-bottom: 5px;
+    .cycle {
+        flex-shrink: 0;
     }
-
-    .value {
-        font-size: 18px;
-        font-weight: bold;
-    }
-
-    .sub {
-        font-size: 12px;
-        color: #999;
-        margin-top: 4px;
-    }
-
-    .controls {
-        display: flex;
-        gap: 7px;
-        flex-wrap: wrap;
-        margin: 8px 0;
-    }
-
-    button {
-        background: #222;
-        color: #eee;
-        border: 1px solid #444;
-        border-radius: 5px;
-        padding: 8px 14px;
-        cursor: pointer;
-        font-size: 13px;
-    }
-
-    button:hover {
-        background: #333;
-    }
-
-    .info {
-        text-align: center;
-        color: #888;
-        font-size: 12px;
-        margin: 4px 0 8px;
-    }
-
-    .chart {
-        width: 100%;
-        height: 520px;
-        margin-bottom: 15px;
-    }
-
-    @media (max-width: 700px) {
-        .stats {
-            grid-template-columns: 1fr;
-        }
-
-        .chart {
-            height: 430px;
-        }
-
-        h1 {
-            font-size: 18px;
-        }
-    }
+}
 </style>
 </head>
 
 <body>
 
-<div class="container">
+<!-- =====================================================
+     HEADER
+===================================================== -->
 
-    <h1>BINANCE FLOW ANALYZER</h1>
+<div class="header">
 
-    <div class="stats">
-
-        <div class="card">
-            <div class="title">ASK BUY — aggressive BUY</div>
-            <div class="value" id="askCount">0 trades</div>
-            <div class="sub" id="askUsd">$0</div>
-        </div>
-
-        <div class="card">
-            <div class="title">BID SELL — aggressive SELL</div>
-            <div class="value" id="bidCount">0 trades</div>
-            <div class="sub" id="bidUsd">$0</div>
-        </div>
-
-        <div class="card">
-            <div class="title">DELTA</div>
-            <div class="value" id="deltaValue">0%</div>
-            <div class="sub">ASK vs BID</div>
-        </div>
-
+    <div class="logo">
+        FLOW
     </div>
 
-    <div class="info">
-        Последнее обновление:
-        <span id="lastUpdate">--:--:--</span>
-    </div>
+    <input
+        id="symbol"
+        class="input"
+        value="BTCUSDT"
+        placeholder="Инструмент"
+    >
 
-    <div class="controls">
-        <button onclick="zoomHours(1)">1H</button>
-        <button onclick="zoomHours(2)">2H</button>
-        <button onclick="zoomHours(4)">4H</button>
-        <button onclick="zoomHours(6)">6H</button>
-        <button onclick="zoomHours(12)">12H</button>
-        <button onclick="showAll()">ВСЁ</button>
-        <button onclick="resetZoom()">RESET</button>
-    </div>
+    <input
+        id="date"
+        class="input date"
+        type="date"
+    >
 
-    <div id="flowChart" class="chart"></div>
+    <input
+        id="startTime"
+        class="input time"
+        type="time"
+        value="09:00"
+    >
 
-    <div id="deltaChart" class="chart"></div>
+    <button class="load" onclick="loadDemo()">
+        ЗАГРУЗИТЬ
+    </button>
 
 </div>
 
+
+<!-- =====================================================
+     STATS
+===================================================== -->
+
+<div class="stats">
+
+    <div class="stat">
+        <span class="stat-name">ASK</span>
+        <span class="ask" id="askStats">0 trades | $0</span>
+    </div>
+
+    <div class="stat">
+        <span class="stat-name">BID</span>
+        <span class="bid" id="bidStats">0 trades | $0</span>
+    </div>
+
+    <div class="stat">
+        <span class="stat-name">DELTA</span>
+        <span class="delta" id="deltaStats">0.00%</span>
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     TIME CYCLES
+===================================================== -->
+
+<div class="cycles">
+
+    <button class="cycle" onclick="setRange(1, this)">
+        1H
+    </button>
+
+    <button class="cycle" onclick="setRange(2, this)">
+        2H
+    </button>
+
+    <button class="cycle" onclick="setRange(4, this)">
+        4H
+    </button>
+
+    <button class="cycle active" onclick="setRange(6, this)">
+        6H
+    </button>
+
+    <button class="cycle" onclick="setRange(12, this)">
+        12H
+    </button>
+
+    <button class="cycle" onclick="showAll(this)">
+        ВСЁ
+    </button>
+
+</div>
+
+
+<!-- =====================================================
+     CHARTS
+===================================================== -->
+
+<div id="charts">
+
+    <div id="flowChart"></div>
+
+    <div id="deltaChart"></div>
+
+</div>
+
+
 <script>
 
-/* =========================================================
+/* =====================================================
    DEMO DATA
-   ========================================================= */
+===================================================== */
 
-const points = [];
+let data = [];
 
 const now = new Date();
-const start = new Date(now.getTime() - 6 * 60 * 60 * 1000);
+
+const start =
+    new Date(now.getTime() - 12 * 60 * 60 * 1000);
 
 let ask = 0;
 let bid = 0;
+
 let askUsd = 0;
 let bidUsd = 0;
 
-for (let i = 0; i <= 360; i++) {
 
-    const t = new Date(start.getTime() + i * 60 * 1000);
+for (let i = 0; i <= 720; i++) {
 
-    ask += 320 + Math.floor(Math.random() * 90);
-    bid += 315 + Math.floor(Math.random() * 90);
+    const time =
+        new Date(start.getTime() + i * 60 * 1000);
 
-    askUsd += 2500000 + Math.random() * 900000;
-    bidUsd += 2450000 + Math.random() * 900000;
+    /*
+       Небольшая корреляция между потоками,
+       чтобы график выглядел естественнее.
+    */
 
-    points.push({
-        time: t,
-        ask: ask,
-        bid: bid,
-        askUsd: askUsd,
-        bidUsd: bidUsd
+    const wave =
+        Math.sin(i / 35) * 25;
+
+    ask += 300 + wave + Math.random() * 100;
+
+    bid += 300 - wave + Math.random() * 100;
+
+    askUsd +=
+        2200000 +
+        Math.random() * 700000;
+
+    bidUsd +=
+        2200000 +
+        Math.random() * 700000;
+
+
+    data.push({
+
+        time,
+
+        ask,
+
+        bid,
+
+        askUsd,
+
+        bidUsd
+
     });
 }
 
 
-/* =========================================================
-   HELPERS
-   ========================================================= */
+/* =====================================================
+   DELTA
+===================================================== */
 
-function deltaPercent(ask, bid) {
+function getDelta(a, b) {
 
-    if (!bid) {
+    if (b === 0) {
         return 0;
     }
 
-    return ((ask - bid) / bid) * 100;
+    return ((a - b) / b) * 100;
 }
 
+
+/* =====================================================
+   FORMAT MONEY
+===================================================== */
 
 function money(value) {
 
-    if (value >= 1000000000) {
-        return "$" + (value / 1000000000).toFixed(2) + "B";
+    if (value >= 1e9) {
+
+        return "$" +
+            (value / 1e9).toFixed(2) +
+            "B";
+
     }
 
-    if (value >= 1000000) {
-        return "$" + (value / 1000000).toFixed(2) + "M";
+    if (value >= 1e6) {
+
+        return "$" +
+            (value / 1e6).toFixed(2) +
+            "M";
+
     }
 
-    if (value >= 1000) {
-        return "$" + (value / 1000).toFixed(1) + "K";
+    if (value >= 1e3) {
+
+        return "$" +
+            (value / 1e3).toFixed(1) +
+            "K";
+
     }
 
-    return "$" + value.toFixed(0);
+    return "$" +
+        value.toFixed(0);
 }
 
 
-/* =========================================================
-   STATS
-   ========================================================= */
+/* =====================================================
+   UPDATE STATS
+===================================================== */
 
 function updateStats() {
 
-    const last = points[points.length - 1];
+    const last =
+        data[data.length - 1];
 
-    const delta = deltaPercent(last.ask, last.bid);
+    const delta =
+        getDelta(last.ask, last.bid);
 
-    document.getElementById("askCount").textContent =
-        last.ask.toLocaleString() + " trades";
 
-    document.getElementById("bidCount").textContent =
-        last.bid.toLocaleString() + " trades";
-
-    document.getElementById("askUsd").textContent =
+    document.getElementById(
+        "askStats"
+    ).textContent =
+        Math.round(last.ask).toLocaleString() +
+        " trades | " +
         money(last.askUsd);
 
-    document.getElementById("bidUsd").textContent =
+
+    document.getElementById(
+        "bidStats"
+    ).textContent =
+        Math.round(last.bid).toLocaleString() +
+        " trades | " +
         money(last.bidUsd);
 
-    document.getElementById("deltaValue").textContent =
-        (delta >= 0 ? "+" : "") + delta.toFixed(2) + "%";
 
-    document.getElementById("lastUpdate").textContent =
-        last.time.toLocaleTimeString();
+    document.getElementById(
+        "deltaStats"
+    ).textContent =
+        (delta >= 0 ? "+" : "") +
+        delta.toFixed(2) +
+        "%";
 }
 
 
-/* =========================================================
-   COMMON PLOT SETTINGS
-   ========================================================= */
+/* =====================================================
+   COMMON TERMINAL STYLE
+===================================================== */
 
-const commonLayout = {
+const axisColor = "#6e757d";
 
-    paper_bgcolor: "#080808",
-    plot_bgcolor: "#080808",
+const gridColor = "#1c2126";
 
-    font: {
-        color: "#ccc"
-    },
+
+const baseLayout = {
+
+    paper_bgcolor: "#0b0e11",
+
+    plot_bgcolor: "#0b0e11",
 
     margin: {
         l: 55,
-        r: 20,
-        t: 20,
-        b: 55
+        r: 65,
+        t: 8,
+        b: 30
     },
 
-    hovermode: "x unified",
+    font: {
+        family: "Arial",
+        color: "#9aa1a8",
+        size: 11
+    },
 
-    dragmode: "zoom",
+    hovermode: "x",
+
+    dragmode: "pan",
 
     xaxis: {
 
@@ -296,395 +554,348 @@ const commonLayout = {
 
         showgrid: true,
 
-        gridcolor: "#222",
+        gridcolor: gridColor,
 
-        zeroline: false,
+        linecolor: "#252a30",
+
+        tickfont: {
+            color: "#727980"
+        },
 
         rangeslider: {
-            visible: true,
-            bgcolor: "#050505",
-            bordercolor: "#222"
-        }
+            visible: false
+        },
+
+        fixedrange: false
     },
 
     yaxis: {
 
+        side: "right",
+
         showgrid: true,
 
-        gridcolor: "#222",
+        gridcolor: gridColor,
 
-        zeroline: false
+        zeroline: false,
+
+        linecolor: "#252a30",
+
+        tickfont: {
+            color: "#727980"
+        },
+
+        fixedrange: false
     }
 };
 
 
-/* =========================================================
+/* =====================================================
    FLOW GRAPH
-   ========================================================= */
+===================================================== */
 
 function drawFlow() {
 
-    const times = points.map(p => p.time);
+    const times =
+        data.map(x => x.time);
 
-    const askData = points.map(p => p.ask);
+    const ask =
+        data.map(x => x.ask);
 
-    const bidData = points.map(p => p.bid);
+    const bid =
+        data.map(x => x.bid);
 
-    const data = [
+
+    const traces = [
 
         {
             x: times,
-            y: askData,
+            y: ask,
+
             type: "scatter",
             mode: "lines",
-            name: "ASK — aggressive BUY",
+
+            name: "ASK",
+
             line: {
                 color: "#a66b3f",
-                width: 2
-            }
+                width: 1.5
+            },
+
+            hovertemplate:
+                "ASK: %{y:,.0f}<extra></extra>"
         },
+
 
         {
             x: times,
-            y: bidData,
+            y: bid,
+
             type: "scatter",
             mode: "lines",
-            name: "BID — aggressive SELL",
+
+            name: "BID",
+
             line: {
                 color: "#35c77a",
-                width: 2
-            }
+                width: 1.5
+            },
+
+            hovertemplate:
+                "BID: %{y:,.0f}<extra></extra>"
         }
 
     ];
 
-    const layout = JSON.parse(JSON.stringify(commonLayout));
-
-    layout.title = {
-        text: "",
-        font: {
-            size: 1
-        }
-    };
 
     Plotly.newPlot(
         "flowChart",
-        data,
-        layout,
+        traces,
+        baseLayout,
         {
+
             responsive: true,
+
             scrollZoom: true,
 
             displaylogo: false,
 
-            doubleClick: "reset",
+            displayModeBar: true,
 
-            modeBarButtonsToRemove: [
-                "lasso2d",
-                "select2d"
-            ]
+            modeBarButtons: [
+
+                [
+                    "zoom2d",
+                    "pan2d",
+                    "resetScale2d"
+                ]
+
+            ],
+
+            doubleClick:
+                "reset"
         }
     );
 }
 
 
-/* =========================================================
+/* =====================================================
    DELTA GRAPH
-   ========================================================= */
+===================================================== */
 
 function drawDelta() {
 
-    const times = points.map(p => p.time);
+    const times =
+        data.map(x => x.time);
 
-    const delta = points.map(p =>
-        deltaPercent(p.ask, p.bid)
-    );
+    const delta =
+        data.map(x =>
+            getDelta(x.ask, x.bid)
+        );
 
-    const data = [
 
-        {
-            x: times,
-            y: delta,
-            type: "scatter",
-            mode: "lines",
-            name: "DELTA",
-            line: {
-                color: "#27d9d9",
-                width: 2
-            }
-        }
+    const layout =
+        JSON.parse(
+            JSON.stringify(baseLayout)
+        );
 
-    ];
 
-    const layout = JSON.parse(JSON.stringify(commonLayout));
+    layout.margin = {
+
+        l: 55,
+        r: 65,
+        t: 5,
+        b: 30
+
+    };
+
 
     layout.yaxis = {
 
+        side: "right",
+
         showgrid: true,
 
-        gridcolor: "#222",
+        gridcolor: gridColor,
 
         zeroline: true,
 
-        zerolinecolor: "#555",
+        zerolinecolor: "#3a4046",
 
-        tickformat: ".1f",
+        tickfont: {
+            color: "#727980"
+        },
 
         ticksuffix: "%",
 
-        title: {
-            text: "%"
-        }
+        fixedrange: false
     };
+
 
     Plotly.newPlot(
         "deltaChart",
-        data,
+
+        [
+
+            {
+
+                x: times,
+
+                y: delta,
+
+                type: "scatter",
+
+                mode: "lines",
+
+                name: "DELTA",
+
+                line: {
+
+                    color: "#27d9d9",
+
+                    width: 1.5
+
+                },
+
+                hovertemplate:
+                    "DELTA: %{y:.2f}%<extra></extra>"
+            }
+
+        ],
+
         layout,
+
         {
+
             responsive: true,
+
             scrollZoom: true,
 
             displaylogo: false,
 
-            doubleClick: "reset",
+            displayModeBar: true,
 
-            modeBarButtonsToRemove: [
-                "lasso2d",
-                "select2d"
-            ]
+            modeBarButtons: [
+
+                [
+                    "zoom2d",
+                    "pan2d",
+                    "resetScale2d"
+                ]
+
+            ],
+
+            doubleClick:
+                "reset"
         }
     );
 }
 
 
-/* =========================================================
-   TIME ZOOM BUTTONS
-   ========================================================= */
-
-function zoomHours(hours) {
-
-    const last = points[points.length - 1].time;
-
-    const first = new Date(
-        last.getTime() - hours * 60 * 60 * 1000
-    );
-
-    const range = [first, last];
-
-    Plotly.relayout(
-        "flowChart",
-        {
-            "xaxis.range": range
-        }
-    );
-
-    Plotly.relayout(
-        "deltaChart",
-        {
-            "xaxis.range": range
-        }
-    );
-}
-
-
-function showAll() {
-
-    const range = [
-        points[0].time,
-        points[points.length - 1].time
-    ];
-
-    Plotly.relayout(
-        "flowChart",
-        {
-            "xaxis.autorange": true
-        }
-    );
-
-    Plotly.relayout(
-        "deltaChart",
-        {
-            "xaxis.autorange": true
-        }
-    );
-}
-
-
-function resetZoom() {
-
-    Plotly.relayout(
-        "flowChart",
-        {
-            "xaxis.autorange": true,
-            "yaxis.autorange": true
-        }
-    );
-
-    Plotly.relayout(
-        "deltaChart",
-        {
-            "xaxis.autorange": true,
-            "yaxis.autorange": true
-        }
-    );
-}
-
-
-/* =========================================================
-   RIGHT MOUSE BUTTON = PAN
-   ========================================================= */
-
-function enableRightMousePan(chartId) {
-
-    const chart = document.getElementById(chartId);
-
-    let dragging = false;
-
-    let lastX = 0;
-    let lastY = 0;
-
-    chart.addEventListener("contextmenu", function(event) {
-
-        event.preventDefault();
-
-    });
-
-
-    chart.addEventListener("mousedown", function(event) {
-
-        if (event.button !== 2) {
-            return;
-        }
-
-        event.preventDefault();
-
-        dragging = true;
-
-        lastX = event.clientX;
-        lastY = event.clientY;
-
-        chart.style.cursor = "move";
-
-    });
-
-
-    window.addEventListener("mousemove", function(event) {
-
-        if (!dragging) {
-            return;
-        }
-
-        const dx = event.clientX - lastX;
-        const dy = event.clientY - lastY;
-
-        lastX = event.clientX;
-        lastY = event.clientY;
-
-        const gd = chart;
-
-        const fullLayout = gd._fullLayout;
-
-        if (!fullLayout) {
-            return;
-        }
-
-        const xaxis = fullLayout.xaxis;
-        const yaxis = fullLayout.yaxis;
-
-        if (!xaxis || !yaxis) {
-            return;
-        }
-
-        const currentXRange = xaxis.range.slice();
-
-        const currentYRange = yaxis.range.slice();
-
-        const xMin = new Date(currentXRange[0]).getTime();
-        const xMax = new Date(currentXRange[1]).getTime();
-
-        const yMin = currentYRange[0];
-        const yMax = currentYRange[1];
-
-        const xSpan = xMax - xMin;
-        const ySpan = yMax - yMin;
-
-        const xLength = xaxis._length;
-        const yLength = yaxis._length;
-
-        if (!xLength || !yLength) {
-            return;
-        }
-
-        /*
-         * Горизонтальное движение:
-         *
-         * мышь вправо
-         * → график двигается вправо
-         */
-
-        const xShift =
-            -(dx / xLength) * xSpan;
-
-
-        /*
-         * Вертикальное движение:
-         *
-         * мышь вниз
-         * → график двигается вниз
-         */
-
-        const yShift =
-            (dy / yLength) * ySpan;
-
-
-        const newXRange = [
-
-            new Date(xMin + xShift),
-
-            new Date(xMax + xShift)
-
-        ];
-
-
-        const newYRange = [
-
-            yMin + yShift,
-
-            yMax + yShift
-
-        ];
-
-
-        Plotly.relayout(
-            gd,
-            {
-                "xaxis.range": newXRange,
-                "yaxis.range": newYRange
-            }
+/* =====================================================
+   TIME RANGE
+===================================================== */
+
+function setRange(hours, button) {
+
+    document
+        .querySelectorAll(".cycle")
+        .forEach(x =>
+            x.classList.remove("active")
         );
 
-    });
+    button.classList.add("active");
 
 
-    window.addEventListener("mouseup", function(event) {
+    const last =
+        data[data.length - 1].time;
 
-        if (event.button !== 2) {
-            return;
+    const first =
+        new Date(
+            last.getTime() -
+            hours * 60 * 60 * 1000
+        );
+
+
+    Plotly.relayout(
+        "flowChart",
+        {
+            "xaxis.range":
+                [first, last]
         }
+    );
 
-        dragging = false;
 
-        chart.style.cursor = "";
-
-    });
-
+    Plotly.relayout(
+        "deltaChart",
+        {
+            "xaxis.range":
+                [first, last]
+        }
+    );
 }
 
 
-/* =========================================================
+/* =====================================================
+   SHOW ALL
+===================================================== */
+
+function showAll(button) {
+
+    document
+        .querySelectorAll(".cycle")
+        .forEach(x =>
+            x.classList.remove("active")
+        );
+
+    button.classList.add("active");
+
+
+    Plotly.relayout(
+        "flowChart",
+        {
+            "xaxis.autorange": true
+        }
+    );
+
+
+    Plotly.relayout(
+        "deltaChart",
+        {
+            "xaxis.autorange": true
+        }
+    );
+}
+
+
+/* =====================================================
+   DEMO LOAD
+===================================================== */
+
+function loadDemo() {
+
+    /*
+       Пока просто перерисовываем демо.
+
+       Позже здесь будет запрос
+       к нашему закрытому серверу.
+    */
+
+    updateStats();
+
+    Plotly.react(
+        "flowChart",
+        Plotly
+            .getDataByDiv("flowChart"),
+        Plotly
+            .getLayoutByDiv("flowChart")
+    );
+}
+
+
+/* =====================================================
    START
-   ========================================================= */
+===================================================== */
 
 updateStats();
 
@@ -692,9 +903,19 @@ drawFlow();
 
 drawDelta();
 
-enableRightMousePan("flowChart");
 
-enableRightMousePan("deltaChart");
+/*
+   Начальное отображение — 6 часов.
+*/
+
+setTimeout(() => {
+
+    const buttons =
+        document.querySelectorAll(".cycle");
+
+    setRange(6, buttons[3]);
+
+}, 300);
 
 </script>
 
