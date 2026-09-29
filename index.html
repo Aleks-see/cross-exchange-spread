@@ -1,267 +1,427 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Flow Terminal</title>
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>FLOW TERMINAL</title>
 
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 
 <style>
+
 * {
     box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
+
     margin: 0;
     padding: 0;
+
     width: 100%;
     height: 100%;
-    background: #0b0e11;
-    color: #d6d9dc;
-    font-family: Arial, Helvetica, sans-serif;
+
     overflow: hidden;
+
+    background: #090b0d;
+
+    color: #d7dadd;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
 }
 
+
+/* =====================================================
+   ОСНОВНОЙ КОНТЕЙНЕР
+===================================================== */
+
 body {
+
     display: flex;
+
     flex-direction: column;
 }
 
-/* ================= HEADER ================= */
+
+/* =====================================================
+   ВЕРХНЯЯ ПАНЕЛЬ
+===================================================== */
 
 .header {
-    height: 54px;
-    min-height: 54px;
+
+    height: 52px;
+
+    min-height: 52px;
 
     display: flex;
-    align-items: center;
-    gap: 10px;
 
-    padding: 7px 12px;
+    align-items: center;
+
+    gap: 8px;
+
+    padding: 7px 10px;
 
     background: #111418;
-    border-bottom: 1px solid #252a30;
+
+    border-bottom:
+        1px solid #272c31;
 }
+
 
 .logo {
-    font-size: 16px;
+
+    font-size: 15px;
+
     font-weight: bold;
-    color: #e6e8eb;
+
+    color: #e1e4e7;
+
     margin-right: 8px;
+
+    letter-spacing: 0.5px;
 }
 
+
 .input {
+
     height: 34px;
 
-    background: #090b0e;
-    border: 1px solid #343a41;
+    background: #090b0d;
+
+    border:
+        1px solid #343a40;
+
     border-radius: 4px;
 
-    color: #e5e7ea;
+    color: #e1e4e7;
 
-    padding: 0 10px;
+    padding:
+        0 9px;
 
-    font-size: 14px;
+    font-size: 13px;
 
     outline: none;
+}
+
+
+.input:focus {
+
+    border-color:
+        #59636d;
+}
+
+
+.symbol {
+
+    width: 115px;
+}
+
+
+.date {
 
     width: 125px;
 }
 
-.input:focus {
-    border-color: #59636e;
-}
-
-.date {
-    width: 120px;
-}
 
 .time {
-    width: 80px;
+
+    width: 82px;
 }
+
 
 button {
-    height: 34px;
 
-    background: #191d22;
-    color: #d8dadd;
+    height: 32px;
 
-    border: 1px solid #343a41;
+    padding:
+        0 11px;
+
+    background: #171b20;
+
+    border:
+        1px solid #343a40;
+
     border-radius: 4px;
 
-    padding: 0 12px;
+    color: #cdd1d5;
 
     cursor: pointer;
-
-    font-size: 13px;
-}
-
-button:hover {
-    background: #252a30;
-}
-
-.load {
-    background: #1d252b;
-}
-
-/* ================= STATS ================= */
-
-.stats {
-    height: 44px;
-    min-height: 44px;
-
-    display: flex;
-    align-items: center;
-
-    gap: 25px;
-
-    padding: 0 15px;
-
-    background: #0d1013;
-    border-bottom: 1px solid #20252a;
 
     font-size: 12px;
 }
 
-.stat {
-    display: flex;
-    gap: 7px;
-    align-items: center;
+
+button:hover {
+
+    background: #23282e;
 }
+
+
+.load {
+
+    background: #1d252b;
+}
+
+
+/* =====================================================
+   СТАТИСТИКА
+===================================================== */
+
+.stats {
+
+    height: 39px;
+
+    min-height: 39px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 25px;
+
+    padding:
+        0 12px;
+
+    background: #0d1013;
+
+    border-bottom:
+        1px solid #20252a;
+
+    font-size: 11px;
+}
+
+
+.stat {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+}
+
 
 .stat-name {
-    color: #777e86;
+
+    color: #70777e;
+
+    font-weight: bold;
 }
+
 
 .ask {
-    color: #b47b50;
+
+    color: #a66b3f;
 }
+
 
 .bid {
-    color: #39c77b;
+
+    color: #35c77a;
 }
+
 
 .delta {
-    color: #25d7d7;
+
+    color: #27d9d9;
 }
 
-/* ================= CYCLES ================= */
+
+/* =====================================================
+   ЦИКЛЫ
+===================================================== */
 
 .cycles {
-    height: 40px;
-    min-height: 40px;
+
+    height: 38px;
+
+    min-height: 38px;
 
     display: flex;
+
     align-items: center;
 
-    gap: 5px;
+    gap: 4px;
 
-    padding: 4px 10px;
+    padding:
+        4px 9px;
 
     background: #111418;
-    border-bottom: 1px solid #252a30;
+
+    border-bottom:
+        1px solid #272c31;
 }
+
 
 .cycle {
-    height: 29px;
 
-    padding: 0 11px;
+    height: 28px;
 
-    background: transparent;
+    min-width: 43px;
 
-    border: 0;
+    padding:
+        0 10px;
+
+    background:
+        transparent;
+
+    border:
+        0;
+
+    color: #777f87;
+
     border-radius: 3px;
-
-    color: #858c94;
 }
+
 
 .cycle:hover {
+
     background: #1c2126;
-    color: #ddd;
+
+    color: #d7dadd;
 }
 
+
 .cycle.active {
-    background: #283038;
+
+    background: #293139;
+
     color: #f0f1f2;
 }
 
-/* ================= CHART AREA ================= */
+
+/* =====================================================
+   ОБЛАСТЬ ГРАФИКОВ
+===================================================== */
 
 #charts {
+
     flex: 1;
 
     min-height: 0;
 
     display: flex;
+
     flex-direction: column;
+
+    background: #090b0d;
 }
+
+
+/*
+   ВАЖНО:
+   Никакого rangeslider между графиками.
+*/
 
 #flowChart {
-    flex: 7;
+
+    height: 68%;
+
     min-height: 0;
+
+    border-bottom:
+        1px solid #292e33;
 }
+
 
 #deltaChart {
-    flex: 3;
-    min-height: 0;
 
-    border-top: 1px solid #292e33;
+    height: 32%;
+
+    min-height: 0;
 }
 
-/* ================= MOBILE ================= */
+
+/* =====================================================
+   MOBILE
+===================================================== */
 
 @media (max-width: 700px) {
 
     .header {
+
         height: auto;
-        min-height: 50px;
+
+        min-height: 52px;
 
         flex-wrap: wrap;
 
-        padding: 7px;
+        padding: 6px;
     }
 
+
     .logo {
+
         width: 100%;
+
         margin-bottom: 2px;
     }
 
-    .input {
-        width: 105px;
+
+    .symbol {
+
+        width: 100px;
     }
+
 
     .date {
-        width: 105px;
+
+        width: 110px;
     }
+
 
     .time {
-        width: 65px;
+
+        width: 70px;
     }
+
 
     .stats {
+
         gap: 12px;
-        padding: 0 8px;
-        font-size: 10px;
+
+        padding:
+            0 7px;
+
+        font-size: 9px;
     }
 
+
     .cycles {
+
         overflow-x: auto;
+
         white-space: nowrap;
     }
 
+
     .cycle {
+
         flex-shrink: 0;
     }
 }
+
 </style>
+
 </head>
+
 
 <body>
 
+
 <!-- =====================================================
-     HEADER
+     ВЕРХНЯЯ ПАНЕЛЬ
 ===================================================== -->
 
 <div class="header">
@@ -270,18 +430,21 @@ button:hover {
         FLOW
     </div>
 
+
     <input
         id="symbol"
-        class="input"
+        class="input symbol"
         value="BTCUSDT"
         placeholder="Инструмент"
     >
+
 
     <input
         id="date"
         class="input date"
         type="date"
     >
+
 
     <input
         id="startTime"
@@ -290,7 +453,11 @@ button:hover {
         value="09:00"
     >
 
-    <button class="load" onclick="loadDemo()">
+
+    <button
+        class="load"
+        onclick="loadDemo()"
+    >
         ЗАГРУЗИТЬ
     </button>
 
@@ -298,64 +465,127 @@ button:hover {
 
 
 <!-- =====================================================
-     STATS
+     СТАТИСТИКА
 ===================================================== -->
 
 <div class="stats">
 
     <div class="stat">
-        <span class="stat-name">ASK</span>
-        <span class="ask" id="askStats">0 trades | $0</span>
+
+        <span class="stat-name">
+            ASK
+        </span>
+
+        <span
+            class="ask"
+            id="askStats"
+        >
+            0 trades | $0
+        </span>
+
     </div>
 
-    <div class="stat">
-        <span class="stat-name">BID</span>
-        <span class="bid" id="bidStats">0 trades | $0</span>
-    </div>
 
     <div class="stat">
-        <span class="stat-name">DELTA</span>
-        <span class="delta" id="deltaStats">0.00%</span>
+
+        <span class="stat-name">
+            BID
+        </span>
+
+        <span
+            class="bid"
+            id="bidStats"
+        >
+            0 trades | $0
+        </span>
+
+    </div>
+
+
+    <div class="stat">
+
+        <span class="stat-name">
+            DELTA
+        </span>
+
+        <span
+            class="delta"
+            id="deltaStats"
+        >
+            0.00%
+        </span>
+
     </div>
 
 </div>
 
 
 <!-- =====================================================
-     TIME CYCLES
+     ЦИКЛЫ
 ===================================================== -->
 
 <div class="cycles">
 
-    <button class="cycle" onclick="setRange(1, this)">
+    <button
+        class="cycle"
+        onclick="setRange(1, this)"
+    >
         1H
     </button>
 
-    <button class="cycle" onclick="setRange(2, this)">
+
+    <button
+        class="cycle"
+        onclick="setRange(2, this)"
+    >
         2H
     </button>
 
-    <button class="cycle" onclick="setRange(4, this)">
+
+    <button
+        class="cycle"
+        onclick="setRange(4, this)"
+    >
         4H
     </button>
 
-    <button class="cycle active" onclick="setRange(6, this)">
+
+    <button
+        class="cycle active"
+        onclick="setRange(6, this)"
+    >
         6H
     </button>
 
-    <button class="cycle" onclick="setRange(12, this)">
+
+    <button
+        class="cycle"
+        onclick="setRange(12, this)"
+    >
         12H
     </button>
 
-    <button class="cycle" onclick="showAll(this)">
+
+    <button
+        class="cycle"
+        onclick="showAll(this)"
+    >
         ВСЁ
+    </button>
+
+
+    <button
+        class="cycle"
+        onclick="resetCharts()"
+    >
+        RESET
     </button>
 
 </div>
 
 
 <!-- =====================================================
-     CHARTS
+     ГРАФИКИ
 ===================================================== -->
 
 <div id="charts">
@@ -369,44 +599,78 @@ button:hover {
 
 <script>
 
+
 /* =====================================================
-   DEMO DATA
+   ДЕМО-ДАННЫЕ
 ===================================================== */
 
 let data = [];
 
-const now = new Date();
+
+const now =
+    new Date();
+
 
 const start =
-    new Date(now.getTime() - 12 * 60 * 60 * 1000);
+    new Date(
+        now.getTime() -
+        12 * 60 * 60 * 1000
+    );
+
 
 let ask = 0;
+
 let bid = 0;
 
 let askUsd = 0;
+
 let bidUsd = 0;
 
 
-for (let i = 0; i <= 720; i++) {
+for (
+    let i = 0;
+    i <= 720;
+    i++
+) {
 
     const time =
-        new Date(start.getTime() + i * 60 * 1000);
+        new Date(
+            start.getTime() +
+            i * 60 * 1000
+        );
+
 
     /*
-       Небольшая корреляция между потоками,
-       чтобы график выглядел естественнее.
+       Делаем потоки немного
+       неодинаковыми, чтобы линии
+       не лежали друг на друге.
     */
 
     const wave =
-        Math.sin(i / 35) * 25;
+        Math.sin(i / 30) * 35;
 
-    ask += 300 + wave + Math.random() * 100;
 
-    bid += 300 - wave + Math.random() * 100;
+    const wave2 =
+        Math.sin(i / 13) * 15;
+
+
+    ask +=
+        300 +
+        wave +
+        wave2 +
+        Math.random() * 100;
+
+
+    bid +=
+        300 -
+        wave +
+        Math.random() * 100;
+
 
     askUsd +=
         2200000 +
         Math.random() * 700000;
+
 
     bidUsd +=
         2200000 +
@@ -426,6 +690,7 @@ for (let i = 0; i <= 720; i++) {
         bidUsd
 
     });
+
 }
 
 
@@ -433,45 +698,69 @@ for (let i = 0; i <= 720; i++) {
    DELTA
 ===================================================== */
 
-function getDelta(a, b) {
+function getDelta(
+    ask,
+    bid
+) {
 
-    if (b === 0) {
+    if (
+        bid === 0
+    ) {
+
         return 0;
     }
 
-    return ((a - b) / b) * 100;
+
+    return (
+        (ask - bid) /
+        bid
+    ) * 100;
 }
 
 
 /* =====================================================
-   FORMAT MONEY
+   ДЕНЬГИ
 ===================================================== */
 
-function money(value) {
+function money(
+    value
+) {
 
-    if (value >= 1e9) {
+    if (
+        value >= 1e9
+    ) {
 
         return "$" +
-            (value / 1e9).toFixed(2) +
+            (
+                value / 1e9
+            ).toFixed(2) +
             "B";
-
     }
 
-    if (value >= 1e6) {
+
+    if (
+        value >= 1e6
+    ) {
 
         return "$" +
-            (value / 1e6).toFixed(2) +
+            (
+                value / 1e6
+            ).toFixed(2) +
             "M";
-
     }
 
-    if (value >= 1e3) {
+
+    if (
+        value >= 1e3
+    ) {
 
         return "$" +
-            (value / 1e3).toFixed(1) +
+            (
+                value / 1e3
+            ).toFixed(1) +
             "K";
-
     }
+
 
     return "$" +
         value.toFixed(0);
@@ -479,115 +768,290 @@ function money(value) {
 
 
 /* =====================================================
-   UPDATE STATS
+   СТАТИСТИКА
 ===================================================== */
 
 function updateStats() {
 
     const last =
-        data[data.length - 1];
+        data[
+            data.length - 1
+        ];
+
+
+    if (!last) {
+
+        return;
+    }
+
 
     const delta =
-        getDelta(last.ask, last.bid);
+        getDelta(
+            last.ask,
+            last.bid
+        );
 
 
-    document.getElementById(
-        "askStats"
-    ).textContent =
-        Math.round(last.ask).toLocaleString() +
+    document
+        .getElementById(
+            "askStats"
+        )
+        .textContent =
+        Math.round(
+            last.ask
+        ).toLocaleString() +
         " trades | " +
-        money(last.askUsd);
+        money(
+            last.askUsd
+        );
 
 
-    document.getElementById(
-        "bidStats"
-    ).textContent =
-        Math.round(last.bid).toLocaleString() +
+    document
+        .getElementById(
+            "bidStats"
+        )
+        .textContent =
+        Math.round(
+            last.bid
+        ).toLocaleString() +
         " trades | " +
-        money(last.bidUsd);
+        money(
+            last.bidUsd
+        );
 
 
-    document.getElementById(
-        "deltaStats"
-    ).textContent =
-        (delta >= 0 ? "+" : "") +
+    document
+        .getElementById(
+            "deltaStats"
+        )
+        .textContent =
+        (
+            delta >= 0
+                ? "+"
+                : ""
+        ) +
         delta.toFixed(2) +
         "%";
 }
 
 
 /* =====================================================
-   COMMON TERMINAL STYLE
+   ЦВЕТА ТЕРМИНАЛА
 ===================================================== */
 
-const axisColor = "#6e757d";
+const GRID =
+    "#1c2126";
 
-const gridColor = "#1c2126";
+const AXIS =
+    "#30363c";
+
+const TEXT =
+    "#777f87";
+
+const CROSS =
+    "#737b83";
 
 
-const baseLayout = {
+/* =====================================================
+   БАЗОВЫЙ LAYOUT
+===================================================== */
 
-    paper_bgcolor: "#0b0e11",
+function baseLayout() {
 
-    plot_bgcolor: "#0b0e11",
+    return {
 
-    margin: {
-        l: 55,
-        r: 65,
-        t: 8,
-        b: 30
-    },
+        paper_bgcolor:
+            "#090b0d",
 
-    font: {
-        family: "Arial",
-        color: "#9aa1a8",
-        size: 11
-    },
+        plot_bgcolor:
+            "#090b0d",
 
-    hovermode: "x",
+        margin: {
 
-    dragmode: "pan",
+            l: 50,
 
-    xaxis: {
+            r: 65,
 
-        type: "date",
+            t: 5,
 
-        showgrid: true,
-
-        gridcolor: gridColor,
-
-        linecolor: "#252a30",
-
-        tickfont: {
-            color: "#727980"
+            b: 28
         },
 
-        rangeslider: {
-            visible: false
+
+        font: {
+
+            family:
+                "Arial",
+
+            color:
+                TEXT,
+
+            size:
+                11
         },
 
-        fixedrange: false
-    },
 
-    yaxis: {
+        hovermode:
+            "closest",
 
-        side: "right",
 
-        showgrid: true,
+        dragmode:
+            "pan",
 
-        gridcolor: gridColor,
 
-        zeroline: false,
+        showlegend:
+            true,
 
-        linecolor: "#252a30",
 
-        tickfont: {
-            color: "#727980"
+        legend: {
+
+            x:
+                1.01,
+
+            xanchor:
+                "left",
+
+            y:
+                1,
+
+            yanchor:
+                "top",
+
+            bgcolor:
+                "rgba(0,0,0,0)",
+
+            borderwidth:
+                0,
+
+            font: {
+
+                size:
+                    11,
+
+                color:
+                    "#c5c9cd"
+            }
         },
 
-        fixedrange: false
-    }
-};
+
+        xaxis: {
+
+            type:
+                "date",
+
+
+            showgrid:
+                true,
+
+            gridcolor:
+                GRID,
+
+
+            linecolor:
+                AXIS,
+
+
+            tickfont: {
+
+                color:
+                    TEXT
+            },
+
+
+            /*
+               НИКАКОГО мини-графика
+               / rangeslider здесь нет.
+            */
+
+            rangeslider: {
+
+                visible:
+                    false
+            },
+
+
+            showspikes:
+                true,
+
+            spikemode:
+                "across+marker",
+
+            spikesnap:
+                "cursor",
+
+            spikecolor:
+                CROSS,
+
+            spikethickness:
+                1,
+
+            spikedash:
+                "dot",
+
+
+            fixedrange:
+                false
+        },
+
+
+        yaxis: {
+
+            side:
+                "right",
+
+
+            showgrid:
+                true,
+
+            gridcolor:
+                GRID,
+
+
+            zeroline:
+                false,
+
+
+            linecolor:
+                AXIS,
+
+
+            tickfont: {
+
+                color:
+                    TEXT
+            },
+
+
+            /*
+               ГОРИЗОНТАЛЬНЫЙ
+               CROSSHAIR
+            */
+
+            showspikes:
+                true,
+
+            spikemode:
+                "across+marker",
+
+            spikesnap:
+                "cursor",
+
+            spikecolor:
+                CROSS,
+
+            spikethickness:
+                1,
+
+            spikedash:
+                "dot",
+
+
+            fixedrange:
+                false
+        }
+
+    };
+}
 
 
 /* =====================================================
@@ -597,84 +1061,161 @@ const baseLayout = {
 function drawFlow() {
 
     const times =
-        data.map(x => x.time);
+        data.map(
+            x => x.time
+        );
 
-    const ask =
-        data.map(x => x.ask);
 
-    const bid =
-        data.map(x => x.bid);
+    const askValues =
+        data.map(
+            x => x.ask
+        );
+
+
+    const bidValues =
+        data.map(
+            x => x.bid
+        );
 
 
     const traces = [
 
         {
-            x: times,
-            y: ask,
 
-            type: "scatter",
-            mode: "lines",
+            x:
+                times,
 
-            name: "ASK",
+            y:
+                askValues,
+
+            type:
+                "scatter",
+
+            mode:
+                "lines",
+
+            name:
+                "ASK — aggressive BUY",
+
 
             line: {
-                color: "#a66b3f",
-                width: 1.5
+
+                color:
+                    "#a66b3f",
+
+                width:
+                    1.6
             },
 
+
             hovertemplate:
-                "ASK: %{y:,.0f}<extra></extra>"
+
+                "ASK: %{y:,.0f}" +
+                "<extra></extra>"
         },
 
 
         {
-            x: times,
-            y: bid,
 
-            type: "scatter",
-            mode: "lines",
+            x:
+                times,
 
-            name: "BID",
+            y:
+                bidValues,
+
+            type:
+                "scatter",
+
+            mode:
+                "lines",
+
+            name:
+                "BID — aggressive SELL",
+
 
             line: {
-                color: "#35c77a",
-                width: 1.5
+
+                color:
+                    "#35c77a",
+
+                width:
+                    1.6
             },
 
+
             hovertemplate:
-                "BID: %{y:,.0f}<extra></extra>"
+
+                "BID: %{y:,.0f}" +
+                "<extra></extra>"
         }
 
     ];
 
 
+    const layout =
+        baseLayout();
+
+
+    /*
+       У верхнего графика
+       время снизу не обязательно.
+       Оставляем немного места.
+    */
+
+    layout.margin.b =
+        10;
+
+
     Plotly.newPlot(
+
         "flowChart",
+
         traces,
-        baseLayout,
+
+        layout,
+
         {
 
-            responsive: true,
+            responsive:
+                true,
 
-            scrollZoom: true,
+            scrollZoom:
+                true,
 
-            displaylogo: false,
+            displaylogo:
+                false,
 
-            displayModeBar: true,
+            displayModeBar:
+                true,
 
             modeBarButtons: [
 
                 [
+
                     "zoom2d",
+
                     "pan2d",
+
                     "resetScale2d"
+
                 ]
 
             ],
 
             doubleClick:
-                "reset"
+                "reset",
+
+            /*
+               Убираем лишний
+               Plotly UI насколько возможно.
+            */
+
+            showTips:
+                false
         }
+
+    ).then(
+        setupRightMousePan
     );
 }
 
@@ -686,79 +1227,200 @@ function drawFlow() {
 function drawDelta() {
 
     const times =
-        data.map(x => x.time);
+        data.map(
+            x => x.time
+        );
+
 
     const delta =
-        data.map(x =>
-            getDelta(x.ask, x.bid)
+        data.map(
+            x =>
+                getDelta(
+                    x.ask,
+                    x.bid
+                )
         );
 
 
     const layout =
-        JSON.parse(
-            JSON.stringify(baseLayout)
-        );
+        baseLayout();
+
+
+    layout.showlegend =
+        false;
 
 
     layout.margin = {
 
-        l: 55,
-        r: 65,
-        t: 5,
-        b: 30
+        l:
+            50,
 
+        r:
+            65,
+
+        t:
+            5,
+
+        b:
+            30
     };
 
 
     layout.yaxis = {
 
-        side: "right",
+        side:
+            "right",
 
-        showgrid: true,
 
-        gridcolor: gridColor,
+        showgrid:
+            true,
 
-        zeroline: true,
+        gridcolor:
+            GRID,
 
-        zerolinecolor: "#3a4046",
+
+        zeroline:
+            true,
+
+        zerolinecolor:
+            "#444b52",
+
+        zerolinewidth:
+            1,
+
+
+        linecolor:
+            AXIS,
+
 
         tickfont: {
-            color: "#727980"
+
+            color:
+                TEXT
         },
 
-        ticksuffix: "%",
 
-        fixedrange: false
+        ticksuffix:
+            "%",
+
+
+        showspikes:
+            true,
+
+        spikemode:
+            "across+marker",
+
+        spikesnap:
+            "cursor",
+
+        spikecolor:
+            CROSS,
+
+        spikethickness:
+            1,
+
+        spikedash:
+            "dot",
+
+
+        fixedrange:
+            false
+    };
+
+
+    layout.xaxis = {
+
+        type:
+            "date",
+
+
+        showgrid:
+            true,
+
+        gridcolor:
+            GRID,
+
+
+        linecolor:
+            AXIS,
+
+
+        tickfont: {
+
+            color:
+                "#858d95"
+        },
+
+
+        rangeslider: {
+
+            visible:
+                false
+        },
+
+
+        showspikes:
+            true,
+
+        spikemode:
+            "across+marker",
+
+        spikesnap:
+            "cursor",
+
+        spikecolor:
+            CROSS,
+
+        spikethickness:
+            1,
+
+        spikedash:
+            "dot",
+
+
+        fixedrange:
+            false
     };
 
 
     Plotly.newPlot(
+
         "deltaChart",
 
         [
 
             {
 
-                x: times,
+                x:
+                    times,
 
-                y: delta,
+                y:
+                    delta,
 
-                type: "scatter",
+                type:
+                    "scatter",
 
-                mode: "lines",
+                mode:
+                    "lines",
 
-                name: "DELTA",
+                name:
+                    "DELTA",
+
 
                 line: {
 
-                    color: "#27d9d9",
+                    color:
+                        "#27d9d9",
 
-                    width: 1.5
-
+                    width:
+                        1.6
                 },
 
+
                 hovertemplate:
-                    "DELTA: %{y:.2f}%<extra></extra>"
+
+                    "DELTA: %{y:.2f}%" +
+                    "<extra></extra>"
             }
 
         ],
@@ -767,104 +1429,632 @@ function drawDelta() {
 
         {
 
-            responsive: true,
+            responsive:
+                true,
 
-            scrollZoom: true,
+            scrollZoom:
+                true,
 
-            displaylogo: false,
+            displaylogo:
+                false,
 
-            displayModeBar: true,
+            displayModeBar:
+                true,
 
             modeBarButtons: [
 
                 [
+
                     "zoom2d",
+
                     "pan2d",
+
                     "resetScale2d"
+
                 ]
 
             ],
 
             doubleClick:
-                "reset"
+                "reset",
+
+            showTips:
+                false
         }
+
+    ).then(
+        setupRightMousePan
     );
 }
 
 
 /* =====================================================
-   TIME RANGE
+   СИНХРОНИЗАЦИЯ ГРАФИКОВ
 ===================================================== */
 
-function setRange(hours, button) {
+let syncing =
+    false;
+
+
+function syncCharts(
+    sourceId,
+    event
+) {
+
+    if (
+        syncing
+    ) {
+
+        return;
+    }
+
+
+    if (
+        !event ||
+        !event["xaxis.range[0]"]
+    ) {
+
+        return;
+    }
+
+
+    syncing =
+        true;
+
+
+    const range = [
+
+        event[
+            "xaxis.range[0]"
+        ],
+
+        event[
+            "xaxis.range[1]"
+        ]
+
+    ];
+
+
+    const targetId =
+        sourceId ===
+        "flowChart"
+
+            ? "deltaChart"
+
+            : "flowChart";
+
+
+    Plotly.relayout(
+
+        targetId,
+
+        {
+
+            "xaxis.range":
+                range
+
+        }
+
+    ).then(
+        () => {
+
+            syncing =
+                false;
+
+        }
+
+    );
+
+}
+
+
+/* =====================================================
+   RIGHT MOUSE PAN
+===================================================== */
+
+function setupRightMousePan(
+    gd
+) {
+
+    let active =
+        false;
+
+    let startX =
+        0;
+
+    let startY =
+        0;
+
+    let originalX =
+        null;
+
+    let originalY =
+        null;
+
+
+    gd.addEventListener(
+
+        "contextmenu",
+
+        function(e) {
+
+            e.preventDefault();
+
+        }
+
+    );
+
+
+    gd.addEventListener(
+
+        "mousedown",
+
+        function(e) {
+
+            /*
+               Только правая кнопка.
+            */
+
+            if (
+                e.button !== 2
+            ) {
+
+                return;
+            }
+
+
+            e.preventDefault();
+
+
+            const full =
+                gd._fullLayout;
+
+
+            const xaxis =
+                full.xaxis;
+
+
+            const yaxis =
+                full.yaxis;
+
+
+            originalX =
+                xaxis.range
+                    ? [
+                        xaxis.range[0],
+                        xaxis.range[1]
+                    ]
+                    : null;
+
+
+            originalY =
+                yaxis.range
+                    ? [
+                        yaxis.range[0],
+                        yaxis.range[1]
+                    ]
+                    : null;
+
+
+            startX =
+                e.clientX;
+
+
+            startY =
+                e.clientY;
+
+
+            active =
+                true;
+
+
+            gd.style.cursor =
+                "grabbing";
+
+        }
+
+    );
+
+
+    document.addEventListener(
+
+        "mousemove",
+
+        function(e) {
+
+            if (
+                !active
+            ) {
+
+                return;
+            }
+
+
+            if (
+                !originalX ||
+                !originalY
+            ) {
+
+                return;
+            }
+
+
+            const full =
+                gd._fullLayout;
+
+
+            const xaxis =
+                full.xaxis;
+
+
+            const yaxis =
+                full.yaxis;
+
+
+            const dx =
+                e.clientX -
+                startX;
+
+
+            const dy =
+                e.clientY -
+                startY;
+
+
+            /*
+               Перевод пикселей
+               в диапазон данных.
+            */
+
+            const plotWidth =
+                xaxis._length;
+
+
+            const plotHeight =
+                yaxis._length;
+
+
+            const xSpan =
+                new Date(
+                    originalX[1]
+                ).getTime() -
+                new Date(
+                    originalX[0]
+                ).getTime();
+
+
+            const ySpan =
+                originalY[1] -
+                originalY[0];
+
+
+            const xShift =
+                -(dx / plotWidth) *
+                xSpan;
+
+
+            const yShift =
+                (dy / plotHeight) *
+                ySpan;
+
+
+            const newX0 =
+                new Date(
+                    new Date(
+                        originalX[0]
+                    ).getTime() +
+                    xShift
+                );
+
+
+            const newX1 =
+                new Date(
+                    new Date(
+                        originalX[1]
+                    ).getTime() +
+                    xShift
+                );
+
+
+            const newY0 =
+                originalY[0] +
+                yShift;
+
+
+            const newY1 =
+                originalY[1] +
+                yShift;
+
+
+            Plotly.relayout(
+
+                gd,
+
+                {
+
+                    "xaxis.range":
+                        [
+                            newX0,
+                            newX1
+                        ],
+
+                    "yaxis.range":
+                        [
+                            newY0,
+                            newY1
+                        ]
+
+                }
+
+            );
+
+        }
+
+    );
+
+
+    document.addEventListener(
+
+        "mouseup",
+
+        function(e) {
+
+            if (
+                !active
+            ) {
+
+                return;
+            }
+
+
+            if (
+                e.button === 2
+            ) {
+
+                active =
+                    false;
+
+
+                gd.style.cursor =
+                    "default";
+            }
+
+        }
+
+    );
+
+}
+
+
+/* =====================================================
+   ЦИКЛЫ
+===================================================== */
+
+function setRange(
+    hours,
+    button
+) {
 
     document
-        .querySelectorAll(".cycle")
-        .forEach(x =>
-            x.classList.remove("active")
+        .querySelectorAll(
+            ".cycle"
+        )
+        .forEach(
+            x =>
+                x.classList.remove(
+                    "active"
+                )
         );
 
-    button.classList.add("active");
+
+    button.classList.add(
+        "active"
+    );
 
 
     const last =
-        data[data.length - 1].time;
+        data[
+            data.length - 1
+        ].time;
+
 
     const first =
         new Date(
+
             last.getTime() -
-            hours * 60 * 60 * 1000
+            hours *
+            60 *
+            60 *
+            1000
+
         );
 
 
-    Plotly.relayout(
-        "flowChart",
-        {
-            "xaxis.range":
-                [first, last]
-        }
-    );
+    const range = [
+
+        first,
+
+        last
+
+    ];
 
 
-    Plotly.relayout(
-        "deltaChart",
-        {
-            "xaxis.range":
-                [first, last]
+    syncing =
+        true;
+
+
+    Promise.all([
+
+        Plotly.relayout(
+
+            "flowChart",
+
+            {
+                "xaxis.range":
+                    range
+            }
+
+        ),
+
+        Plotly.relayout(
+
+            "deltaChart",
+
+            {
+                "xaxis.range":
+                    range
+            }
+
+        )
+
+    ]).then(
+
+        () => {
+
+            syncing =
+                false;
+
         }
+
     );
+
 }
 
 
 /* =====================================================
-   SHOW ALL
+   ВСЯ ИСТОРИЯ
 ===================================================== */
 
-function showAll(button) {
+function showAll(
+    button
+) {
 
     document
-        .querySelectorAll(".cycle")
-        .forEach(x =>
-            x.classList.remove("active")
+        .querySelectorAll(
+            ".cycle"
+        )
+        .forEach(
+            x =>
+                x.classList.remove(
+                    "active"
+                )
         );
 
-    button.classList.add("active");
 
-
-    Plotly.relayout(
-        "flowChart",
-        {
-            "xaxis.autorange": true
-        }
+    button.classList.add(
+        "active"
     );
 
 
-    Plotly.relayout(
-        "deltaChart",
-        {
-            "xaxis.autorange": true
+    syncing =
+        true;
+
+
+    Promise.all([
+
+        Plotly.relayout(
+
+            "flowChart",
+
+            {
+                "xaxis.autorange":
+                    true
+            }
+
+        ),
+
+        Plotly.relayout(
+
+            "deltaChart",
+
+            {
+                "xaxis.autorange":
+                    true
+            }
+
+        )
+
+    ]).then(
+
+        () => {
+
+            syncing =
+                false;
+
         }
+
     );
+
+}
+
+
+/* =====================================================
+   RESET
+===================================================== */
+
+function resetCharts() {
+
+    document
+        .querySelectorAll(
+            ".cycle"
+        )
+        .forEach(
+            x =>
+                x.classList.remove(
+                    "active"
+                )
+        );
+
+
+    syncing =
+        true;
+
+
+    Promise.all([
+
+        Plotly.relayout(
+
+            "flowChart",
+
+            {
+
+                "xaxis.autorange":
+                    true,
+
+                "yaxis.autorange":
+                    true
+
+            }
+
+        ),
+
+        Plotly.relayout(
+
+            "deltaChart",
+
+            {
+
+                "xaxis.autorange":
+                    true,
+
+                "yaxis.autorange":
+                    true
+
+            }
+
+        )
+
+    ]).then(
+
+        () => {
+
+            syncing =
+                false;
+
+        }
+
+    );
+
 }
 
 
@@ -875,26 +2065,93 @@ function showAll(button) {
 function loadDemo() {
 
     /*
-       Пока просто перерисовываем демо.
+       Пока это только макет.
 
-       Позже здесь будет запрос
-       к нашему закрытому серверу.
+       В будущем:
+
+       symbol
+       date
+       startTime
+
+       пойдут на наш backend,
+       а оттуда придут реальные
+       рассчитанные ASK/BID/DELTA.
     */
 
     updateStats();
 
-    Plotly.react(
-        "flowChart",
-        Plotly
-            .getDataByDiv("flowChart"),
-        Plotly
-            .getLayoutByDiv("flowChart")
+
+    drawFlow();
+
+    drawDelta();
+
+
+    setTimeout(
+
+        () => {
+
+            const buttons =
+                document
+                    .querySelectorAll(
+                        ".cycle"
+                    );
+
+
+            setRange(
+                6,
+                buttons[3]
+            );
+
+        },
+
+        300
     );
+
 }
 
 
 /* =====================================================
-   START
+   СИНХРОНИЗАЦИЯ ZOOM
+===================================================== */
+
+document
+    .getElementById(
+        "flowChart"
+    )
+    .on(
+        "plotly_relayout",
+
+        function(event) {
+
+            syncCharts(
+                "flowChart",
+                event
+            );
+
+        }
+    );
+
+
+document
+    .getElementById(
+        "deltaChart"
+    )
+    .on(
+        "plotly_relayout",
+
+        function(event) {
+
+            syncCharts(
+                "deltaChart",
+                event
+            );
+
+        }
+    );
+
+
+/* =====================================================
+   ЗАПУСК
 ===================================================== */
 
 updateStats();
@@ -904,20 +2161,29 @@ drawFlow();
 drawDelta();
 
 
-/*
-   Начальное отображение — 6 часов.
-*/
+setTimeout(
 
-setTimeout(() => {
+    () => {
 
-    const buttons =
-        document.querySelectorAll(".cycle");
+        const buttons =
+            document
+                .querySelectorAll(
+                    ".cycle"
+                );
 
-    setRange(6, buttons[3]);
 
-}, 300);
+        setRange(
+            6,
+            buttons[3]
+        );
+
+    },
+
+    400
+);
 
 </script>
 
 </body>
+
 </html>
