@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="ru">
 
 <head>
@@ -6,9 +7,10 @@
 <meta charset="UTF-8">
 
 <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
->
+name="viewport"
+content="width=device-width, initial-scale=1.0"
+
+
 
 <title>FLOW TERMINAL</title>
 
@@ -416,9 +418,7 @@ button:hover {
 
 </head>
 
-
 <body>
-
 
 <!-- =====================================================
      ВЕРХНЯЯ ПАНЕЛЬ
@@ -426,43 +426,42 @@ button:hover {
 
 <div class="header">
 
-    <div class="logo">
-        FLOW
-    </div>
-
-
-    <input
-        id="symbol"
-        class="input symbol"
-        value="BTCUSDT"
-        placeholder="Инструмент"
-    >
-
-
-    <input
-        id="date"
-        class="input date"
-        type="date"
-    >
-
-
-    <input
-        id="startTime"
-        class="input time"
-        type="time"
-        value="09:00"
-    >
-
-
-    <button
-        class="load"
-        onclick="loadDemo()"
-    >
-        ЗАГРУЗИТЬ
-    </button>
-
+<div class="logo">
+    FLOW
 </div>
 
+
+<input
+    id="symbol"
+    class="input symbol"
+    value="BTCUSDT"
+    placeholder="Инструмент"
+>
+
+
+<input
+    id="date"
+    class="input date"
+    type="date"
+>
+
+
+<input
+    id="startTime"
+    class="input time"
+    type="time"
+    value="09:00"
+>
+
+
+<button
+    class="load"
+    onclick="loadDemo()"
+>
+    ЗАГРУЗИТЬ
+</button>
+
+</div>
 
 <!-- =====================================================
      СТАТИСТИКА
@@ -470,55 +469,54 @@ button:hover {
 
 <div class="stats">
 
-    <div class="stat">
+<div class="stat">
 
-        <span class="stat-name">
-            ASK
-        </span>
+    <span class="stat-name">
+        ASK
+    </span>
 
-        <span
-            class="ask"
-            id="askStats"
-        >
-            0 trades | $0
-        </span>
-
-    </div>
-
-
-    <div class="stat">
-
-        <span class="stat-name">
-            BID
-        </span>
-
-        <span
-            class="bid"
-            id="bidStats"
-        >
-            0 trades | $0
-        </span>
-
-    </div>
-
-
-    <div class="stat">
-
-        <span class="stat-name">
-            DELTA
-        </span>
-
-        <span
-            class="delta"
-            id="deltaStats"
-        >
-            0.00%
-        </span>
-
-    </div>
+    <span
+        class="ask"
+        id="askStats"
+    >
+        0 trades | $0
+    </span>
 
 </div>
 
+
+<div class="stat">
+
+    <span class="stat-name">
+        BID
+    </span>
+
+    <span
+        class="bid"
+        id="bidStats"
+    >
+        0 trades | $0
+    </span>
+
+</div>
+
+
+<div class="stat">
+
+    <span class="stat-name">
+        DELTA
+    </span>
+
+    <span
+        class="delta"
+        id="deltaStats"
+    >
+        0.00%
+    </span>
+
+</div>
+
+</div>
 
 <!-- =====================================================
      ЦИКЛЫ
@@ -526,63 +524,62 @@ button:hover {
 
 <div class="cycles">
 
-    <button
-        class="cycle"
-        onclick="setRange(1, this)"
-    >
-        1H
-    </button>
+<button
+    class="cycle"
+    onclick="setRange(1, this)"
+>
+    1H
+</button>
 
 
-    <button
-        class="cycle"
-        onclick="setRange(2, this)"
-    >
-        2H
-    </button>
+<button
+    class="cycle"
+    onclick="setRange(2, this)"
+>
+    2H
+</button>
 
 
-    <button
-        class="cycle"
-        onclick="setRange(4, this)"
-    >
-        4H
-    </button>
+<button
+    class="cycle"
+    onclick="setRange(4, this)"
+>
+    4H
+</button>
 
 
-    <button
-        class="cycle active"
-        onclick="setRange(6, this)"
-    >
-        6H
-    </button>
+<button
+    class="cycle active"
+    onclick="setRange(6, this)"
+>
+    6H
+</button>
 
 
-    <button
-        class="cycle"
-        onclick="setRange(12, this)"
-    >
-        12H
-    </button>
+<button
+    class="cycle"
+    onclick="setRange(12, this)"
+>
+    12H
+</button>
 
 
-    <button
-        class="cycle"
-        onclick="showAll(this)"
-    >
-        ВСЁ
-    </button>
+<button
+    class="cycle"
+    onclick="showAll(this)"
+>
+    ВСЁ
+</button>
 
 
-    <button
-        class="cycle"
-        onclick="resetCharts()"
-    >
-        RESET
-    </button>
+<button
+    class="cycle"
+    onclick="resetCharts()"
+>
+    RESET
+</button>
 
 </div>
-
 
 <!-- =====================================================
      ГРАФИКИ
@@ -590,12 +587,11 @@ button:hover {
 
 <div id="charts">
 
-    <div id="flowChart"></div>
+<div id="flowChart"></div>
 
-    <div id="deltaChart"></div>
+<div id="deltaChart"></div>
 
 </div>
-
 
 <script>
 
